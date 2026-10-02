@@ -1,6 +1,10 @@
 MoveDescriptions::
 ; entries correspond to move ids (see constants/move_constants.asm)
-	table_width 2
+	indirect_table 2, 1
+	indirect_entries NUM_ATTACKS, MoveDescriptions1
+	indirect_table_end
+
+MoveDescriptions1:
 	dw AcrobaticsDescription
 	dw KarateChopDescription
 	dw DoubleSlapDescription
@@ -256,15 +260,188 @@ MoveDescriptions::
 	dw PlayRoughDescription
 	dw DisarmVoiceDescription
 	dw StruggleDescription
-	assert_table_length NUM_ATTACKS
-	dw Move00Description
-	assert_table_length $100
+	dw WeatherBallDescription
+	dw HealingLightDescription
+	dw HealingLightDescription
+	dw FreshSnackDescription
+	dw FuryStrikesDescription
+	dw MysticalFireDescription
+	dw FireFangDescription
+	dw IceFangDescription
+	dw ThunderFangDescription
+	dw PoisonFangDescription
+	dw PsychicFangsDescription
+	dw InfernoDescription
+	dw OverheatDescription
+	dw BlazeKickDescription
+	dw BubbleDescription
+	dw MuddyWaterDescription
+	dw ClampDescription
+	dw FlipTurnDescription
+	dw RazorShellDescription
+	dw DiveDescription
+	dw WithdrawDescription
+	dw LeafStormDescription
+	dw CottonSporeDescription
+	dw ShockWaveDescription
+	dw PsyshockDescription
+	dw PsychoCutDescription
+	dw MeditateDescription
+	dw IceBallDescription
+	dw DualChopDescription
+	dw BreakSwipeDescription
+	dw DracoMeteorDescription
+	dw IronDefenseDescription
+	dw MetalSoundDescription
+	dw MirrorShotDescription
+	dw MagnetBombDescription
+	dw MetalBurstDescription
+	dw InfestationDescription
+	dw StruggleBugDescription
+	dw QuiverDanceDescription
+	dw RockTombDescription
+	dw RockPolishDescription
+	dw DrillRunDescription
+	dw MudShotDescription
+	dw SandAttackDescription
+	dw CrossPoisonDescription
+	dw PoisonGasDescription
+	dw AcidArmorDescription
+	dw BounceDescription
+	dw AirCutterDescription
+	dw PowerUpPunchDescription
+	dw RollingKickDescription
+	dw VitalThrowDescription
+	dw JumpKickDescription
+	dw SuperpowerDescription
+	dw DetectDescription
 
-Move00Description:
+	dw ConstrictDescription
+	dw BindDescription
+	dw BarrageDescription
+	dw CometPunchDescription
+	dw SpikeCannonDescription
+	dw PoundDescription
+	dw FakeOutDescription
+	dw EggBombDescription
+	dw FrustrationDescription
+	dw SelfDestructDescription
+	dw FlailDescription
+	dw HardenDescription
+	dw LovelyKissDescription
+	dw TailWhipDescription
+	dw WhirlwindDescription
+	dw SweetScentDescription
+	dw BlockDescription
+	dw RevengeDescription
+	dw VacuumWaveDescription
+	dw ClearSmogDescription
+	dw SludgeDescription
+	dw SandTombDescription
+	dw MudBombDescription
+	dw HeadSmashDescription
+	dw TwineedleDescription
+	dw FirstImpressDescription
+	dw SilverWindDescription
+	dw SignalBeamDescription
+	dw SpiderWebDescription
+	dw ShadowSneakDescription
+	dw ShadowPunchDescription
+	dw OminousWindDescription
+	dw FlameWheelDescription
+	dw MagicalLeafDescription
+	dw BulletSeedDescription
+	dw HornLeechDescription
+	dw LeafBladeDescription
+	dw WoodHammerDescription
+	dw SolarBladeDescription
+	dw ElectrowebDescription
+	dw PowderSnowDescription
+	dw TwisterDescription
+	dw SnarlDescription
+	dw FairyWindDescription
+
+	dw MistDescription
+	dw LuckyChantDescription
+	dw BrineDescription
+	dw GastroAcidDescription
+	dw SimpleBeamDescription
+	dw WorrySeedDescription
+	dw RecycleDescription
+	dw FissureDescription
+	dw GuillotineDescription
+	dw HornDrillDescription
+	dw SheerColdDescription
+	dw MagicCoatDescription
+	dw EruptionDescription
+	dw WaterSpoutDescription
+	dw NuzzleDescription
+	dw SkullBashDescription
+	dw SkyAttackDescription
+	dw RazorWindDescription
+	dw EndeavorDescription
+	dw LockOnDescription
+	dw MindReaderDescription
+	dw SoakDescription
+	dw BurnUpDescription
+	dw GravityDescription
+	dw GrassKnotDescription
+	dw MirrorMoveDescription
+	dw IncinerateDescription
+	dw PluckDescription
+	dw StoredPowerDescription
+	dw CosmicPowerDescription
+	dw PsychoShiftDescription
+	dw TrumpCardDescription
+	dw PaybackDescription
+	dw AuroraVeilDescription
+	dw StickWebDescription
+	dw TauntDescription
+	dw TormentDescription
+	dw YawnDescription
+	dw MagnetRiseDescription
+	dw ThroatChopDescription
+	dw EmbargoDescription
+	dw SnoreDescription
+	dw SwitcherooDescription
+	dw PsywaveDescription
+	dw HeavySlamDescription
+	dw ElectroBallDescription
+	dw FuryCutterDescription
+	dw CopycatDescription
+	dw CamouflageDescription
+	dw NaturePowerDescription
+	dw DragonTailDescription
+	dw MementoDescription
+	dw FocusPunchDescription
+	dw ScaleShotDescription
+	dw NightmareDescription
+	dw IngrainDescription
+	dw ImprisonDescription
+	dw BoneRushDescription
+	dw SubmissionDescription
+	dw SharpenDescription
+	dw BoneClubDescription
+	dw SmogDescription
+	dw MegaPunchDescription
+	dw SlamDescription
+	dw KinesisDescription
+	dw ViseGripDescription
+	dw MegaKickDescription
+	dw AromatherapyDescription
+	dw BabyDollEyesDescription
+	dw CottonGuardDescription
+	dw CovetDescription
+	dw HeatWaveDescription
+	dw HowlDescription
+.IndirectEnd::
+
+InvalidMoveDescription:
 	text "?"
 	done
 
 LowKickDescription:
+GrassKnotDescription:
 	text "Deals more damage"
 	next "to heavier foes."
 	done
@@ -278,6 +455,10 @@ CrossChopDescription:
 NightSlashDescription:
 ShadowClawDescription:
 StoneEdgeDescription:
+PsychoCutDescription:
+DrillRunDescription:
+AirCutterDescription:
+LeafBladeDescription:
 	text "Has a high criti-"
 	next "cal hit ratio."
 	done
@@ -287,6 +468,11 @@ FeintAttackDescription:
 DisarmVoiceDescription:
 AerialAceDescription:
 AuraSphereDescription:
+ShockWaveDescription:
+VitalThrowDescription:
+MagnetBombDescription:
+ShadowPunchDescription:
+MagicalLeafDescription:
 	text "An attack that"
 	next "never misses."
 	done
@@ -296,6 +482,7 @@ MegaDrainDescription:
 LeechLifeDescription:
 GigaDrainDescription:
 DrainPunchDescription:
+HornLeechDescription:
 	text "Steals 1/2 of the"
 	next "damage inflicted."
 	done
@@ -316,6 +503,7 @@ FuryStrikesDescription:
 	done
 
 PinMissileDescription:
+SpikeCannonDescription:
 	text "Fires pins that"
 	next "strike 2-5 times."
 	done
@@ -330,8 +518,34 @@ RockBlastDescription:
 	next "hit 2-5 times."
 	done
 
+BarrageDescription:
+	text "Throws orbs to"
+	next "hit 2-5 times."
+	done
+
+CometPunchDescription:
+	text "Repeatedly punches"
+	next "2-5 times."
+	done
+
+BulletSeedDescription:
+	text "Fires seeds that"
+	next "strike 2-5 times."
+	done
+
+ScaleShotDescription:
+	text "Shoots scales that"
+	next "hit 2-5 times."
+	done
+
+BoneRushDescription:
+	text "Bone used to"
+	next "strike 2-5 times."
+	done
+
 TakeDownDescription:
 DoubleEdgeDescription:
+WoodHammerDescription:
 	text "A tackle that also"
 	next "hurts the user."
 	done
@@ -340,6 +554,16 @@ FlareBlitzDescription:
 WildChargeDescription:
 BraveBirdDescription:
 	text "A charge that also"
+	next "hurts the user."
+	done
+
+HeadSmashDescription:
+	text "A headbutt that"
+	next "hurts the user."
+	done
+
+SubmissionDescription:
+	text "A body slam that"
 	next "hurts the user."
 	done
 
@@ -356,6 +580,9 @@ ExtrasensoryDescription:
 DarkPulseDescription:
 AstonishDescription:
 IcicleCrashDescription:
+RollingKickDescription:
+TwisterDescription:
+BoneClubDescription:
 	text "An attack that may"
 	next "cause flinching."
 	done
@@ -364,6 +591,9 @@ PoisonStingDescription:
 SludgeBombDescription:
 PoisonJabDescription:
 GunkShotDescription:
+CrossPoisonDescription:
+SludgeDescription:
+SmogDescription:
 	text "An attack that may"
 	next "poison the foe."
 	done
@@ -373,8 +603,16 @@ FlamethrowerDescription:
 FireBlastDescription:
 SacredFireDescription:
 ScaldDescription:
+BlazeKickDescription:
+FlameWheelDescription:
+HeatWaveDescription:
 	text "An attack that may"
 	next "inflict a burn."
+	done
+
+InfernoDescription:
+	text "An attack that"
+	next "always burns."
 	done
 
 BodySlamDescription:
@@ -387,6 +625,7 @@ SparkDescription:
 	next "cause paralysis."
 	done
 
+NuzzleDescription:
 ZapCannonDescription:
 	text "An attack that"
 	next "always paralyzes."
@@ -394,6 +633,7 @@ ZapCannonDescription:
 
 IceBeamDescription:
 BlizzardDescription:
+PowderSnowDescription:
 	text "An attack that may"
 	next "freeze the foe."
 	done
@@ -403,6 +643,7 @@ ConfusionDescription:
 DizzyPunchDescription:
 WaterPulseDescription:
 HurricaneDescription:
+SignalBeamDescription:
 	text "An attack that may"
 	next "confuse the foe."
 	done
@@ -417,6 +658,11 @@ MetalClawDescription:
 	next "up user's Attack."
 	done
 
+PowerUpPunchDescription:
+	text "An attack that"
+	next "ups user's Attack."
+	done
+
 SteelWingDescription:
 	text "An attack that may"
 	next "up user's Defense."
@@ -428,6 +674,8 @@ FlameChargeDescription:
 	done
 
 AncientpowerDescription:
+SilverWindDescription:
+OminousWindDescription:
 	text "An attack that may"
 	next "raise all stats."
 	done
@@ -437,25 +685,44 @@ CloseCombatDescription:
 	next "Def and Sp.Def."
 	done
 
+OverheatDescription:
+LeafStormDescription:
+DracoMeteorDescription:
+	text "Sharply lowers the"
+	next "user's Sp.Atk."
+	done
+
+SuperpowerDescription:
+	text "Lowers the user's"
+	next "Atk and Def."
+	done
+
 AuroraBeamDescription:
 PlayRoughDescription:
 	text "An attack that may"
 	next "lower Attack."
 	done
 
-RockSmashDescription:
 if !DEF(FAITHFUL)
+RockSmashDescription:
+endc
+PsychicFangsDescription:
 	text "Removes Reflect"
 	next "and Light Screen."
 	done
+
+if DEF(FAITHFUL)
+RockSmashDescription:
 endc
 CrunchDescription:
 IronTailDescription:
+RazorShellDescription:
 	text "An attack that may"
 	next "lower Defense."
 	done
 
 BubbleBeamDescription:
+ConstrictDescription:
 	text "An attack that may"
 	next "lower Speed."
 	done
@@ -470,9 +737,36 @@ IcyWindDescription:
 	next "lowers Speed."
 	done
 
+RockTombDescription:
+	text "A Rock attack"
+	next "that lowers Speed."
+	done
+
+MudShotDescription:
+	text "A muddy attack"
+	next "that lowers Speed."
+	done
+
+ElectrowebDescription:
+	text "An electric attack"
+	next "that lowers Speed."
+	done
+
 MoonblastDescription:
+MysticalFireDescription:
 	text "An attack that may"
 	next "lower Sp.Atk."
+	done
+
+StruggleBugDescription:
+SnarlDescription:
+	text "An attack that"
+	next "lowers Sp.Atk."
+	done
+
+BreakSwipeDescription:
+	text "An attack that"
+	next "lowers Attack."
 	done
 
 AcidDescription:
@@ -493,6 +787,9 @@ MudSlapDescription:
 	done
 
 OctazookaDescription:
+MuddyWaterDescription:
+MirrorShotDescription:
+MudBombDescription:
 	text "An attack that may"
 	next "lower accuracy."
 	done
@@ -514,6 +811,7 @@ NightShadeDescription:
 	done
 
 PoisonpowderDescription:
+PoisonGasDescription:
 	text "A move that may"
 	next "poison the foe."
 	done
@@ -536,6 +834,7 @@ GlareDescription:
 SingDescription:
 SleepPowderDescription:
 HypnosisDescription:
+LovelyKissDescription:
 	text "May cause the foe"
 	next "to fall asleep."
 	done
@@ -557,7 +856,16 @@ SweetKissDescription:
 	next "confuse the foe."
 	done
 
+MeditateDescription:
+SharpenDescription:
+HowlDescription:
+	text "Raises the user's"
+	next "Attack."
+	done
+
 DefenseCurlDescription:
+WithdrawDescription:
+HardenDescription:
 	text "Raises the user's"
 	next "Defense."
 	done
@@ -578,11 +886,19 @@ SwordsDanceDescription:
 	done
 
 BarrierDescription:
+IronDefenseDescription:
+AcidArmorDescription:
 	text "Sharply raises the"
 	next "user's Defense."
 	done
 
+CottonGuardDescription:
+	text "Drastically raises"
+	next "user's Defense."
+	done
+
 AgilityDescription:
+RockPolishDescription:
 	text "Sharply raises the"
 	next "user's Speed."
 	done
@@ -627,12 +943,24 @@ HoneClawsDescription:
 	next "Atk and accuracy."
 	done
 
+QuiverDanceDescription:
+	text "Raises Sp.Atk,"
+	next "Sp.Def, and Speed."
+	done
+
+CosmicPowerDescription:
+	text "Raises the user's"
+	next "Def and Sp.Def."
+	done
+
 GrowlDescription:
+BabyDollEyesDescription:
 	text "A move that lowers"
 	next "the foe's Attack."
 	done
 
 LeerDescription:
+TailWhipDescription:
 	text "A move that lowers"
 	next "the foe's Defense."
 	done
@@ -644,6 +972,7 @@ StringShotDescription:
 
 SmokescreenDescription:
 FlashDescription:
+SandAttackDescription:
 	text "A move that lowers"
 	next "the foe's accuracy."
 	done
@@ -654,13 +983,20 @@ CharmDescription:
 	done
 
 ScreechDescription:
+MetalSoundDescription:
 	text "Sharply lowers the"
 	next "foe's Defense."
 	done
 
 ScaryFaceDescription:
+CottonSporeDescription:
 	text "Sharply lowers the"
 	next "foe's Speed."
+	done
+
+SweetScentDescription:
+	text "Lowers the foe's"
+	next "Evasiveness."
 	done
 
 HazeDescription:
@@ -668,9 +1004,24 @@ HazeDescription:
 	next "stat changes."
 	done
 
+ClearSmogDescription:
+	text "Attack that resets"
+	next "all stat changes."
+	done
+
 SafeguardDescription:
 	text "Prevents all"
 	next "status problems."
+	done
+
+MistDescription:
+	text "Prevents all"
+	next "stat decreases."
+	done
+
+LuckyChantDescription:
+	text "Prevents all"
+	next "critical hits."
 	done
 
 ReflectDescription:
@@ -681,6 +1032,11 @@ ReflectDescription:
 LightScreenDescription:
 	text "Raises Sp.Def with"
 	next "a wall of light."
+	done
+
+AuroraVeilDescription:
+	text "Reduces all damage"
+	next "while hailing."
 	done
 
 RecoverDescription:
@@ -708,6 +1064,10 @@ OutrageDescription:
 FireSpinDescription:
 WhirlpoolDescription:
 WrapDescription:
+ClampDescription:
+InfestationDescription:
+BindDescription:
+SandTombDescription:
 	text "Traps the foe for"
 	next "2-5 turns."
 	done
@@ -717,6 +1077,7 @@ TrickRoomDescription:
 	next "first for 5 turns."
 	done
 
+SelfDestructDescription:
 ExplosionDescription:
 	text "Very powerful but"
 	next "makes user faint."
@@ -733,12 +1094,26 @@ FalseSwipeDescription:
 	done
 
 SolarBeamDescription:
+SolarBladeDescription:
+SkullBashDescription:
+SkyAttackDescription:
+RazorWindDescription:
 	text "1st turn: Prepare"
 	next "2nd turn: Attack"
 	done
 
 FlyDescription:
 	text "1st turn: Fly"
+	next "2nd turn: Attack"
+	done
+
+BounceDescription:
+	text "1st turn: Bounce"
+	next "2nd turn: Attack"
+	done
+
+DiveDescription:
+	text "1st turn: Dive"
 	next "2nd turn: Attack"
 	done
 
@@ -764,6 +1139,7 @@ HexDescription:
 	done
 
 AvalancheDescription:
+RevengeDescription:
 	text "Damage doubles if"
 	next "user is hit first."
 	done
@@ -771,6 +1147,11 @@ AvalancheDescription:
 VenoshockDescription:
 	text "Damage doubles if"
 	next "foe is poisoned."
+	done
+
+BrineDescription:
+	text "Damage doubles if"
+	next "foe has low HP."
 	done
 
 RainDanceDescription:
@@ -791,6 +1172,7 @@ HailDescription:
 
 UTurnDescription:
 VoltSwitchDescription:
+FlipTurnDescription:
 	text "Switches out after"
 	next "making its attack."
 	done
@@ -820,6 +1202,11 @@ MirrorCoatDescription:
 	next "attack double."
 	done
 
+MetalBurstDescription:
+	text "Returns an attack"
+	next "back stronger."
+	done
+
 SpikesDescription:
 	text "Hurts foes when"
 	next "they switch in."
@@ -827,6 +1214,11 @@ SpikesDescription:
 
 ToxicSpikesDescription:
 	text "Poisons foes when"
+	next "they switch in."
+	done
+
+StickWebDescription:
+	text "Slows foes when"
 	next "they switch in."
 	done
 
@@ -853,6 +1245,16 @@ MachPunchDescription:
 BulletPunchDescription:
 	text "A tough punch that"
 	next "always goes first."
+	done
+
+VacuumWaveDescription:
+	text "A punch wave that"
+	next "always goes first."
+	done
+
+ShadowSneakDescription:
+	text "A shadow attack."
+	next "Always goes first."
 	done
 
 ExtremespeedDescription:
@@ -905,6 +1307,11 @@ TackleDescription:
 	next "attack."
 	done
 
+PoundDescription:
+	text "An attack using a"
+	next "tail or foreleg."
+	done
+
 HornAttackDescription:
 	text "An attack using a"
 	next "horn to jab."
@@ -925,6 +1332,16 @@ SuckerPunchDescription:
 	next "foe does."
 	done
 
+FirstImpressDescription:
+	text "A fast strike for"
+	next "only the 1st turn."
+	done
+
+FakeOutDescription:
+	text "A fast flinch hit"
+	next "for the 1st turn."
+	done
+
 DazzlingleamDescription:
 	text "Dazzles with a"
 	next "powerful flash."
@@ -935,6 +1352,16 @@ RoarDescription:
 	next "to end battle."
 	done
 
+WhirlwindDescription:
+	text "Blows away foes"
+	next "to end battle."
+	done
+
+DragonTailDescription:
+	text "Knocks foes away"
+	next "to end battle."
+	done
+
 DisableDescription:
 	text "Disables the foe's"
 	next "most recent move."
@@ -942,6 +1369,11 @@ DisableDescription:
 
 WaterGunDescription:
 	text "Squirts water to"
+	next "attack."
+	done
+
+BubbleDescription:
+	text "Shoots bubbles to"
 	next "attack."
 	done
 
@@ -1011,6 +1443,7 @@ SkillSwapDescription:
 	done
 
 HiJumpKickDescription:
+JumpKickDescription:
 	text "May miss and hurt"
 	next "the user."
 	done
@@ -1031,8 +1464,14 @@ SplashDescription:
 	done
 
 BonemerangDescription:
+DualChopDescription:
 	text "An attack that"
 	next "strikes twice."
+	done
+
+TwineedleDescription:
+	text "Strikes twice and"
+	next "may poison foe."
 	done
 
 RestDescription:
@@ -1071,6 +1510,7 @@ SketchDescription:
 	done
 
 ThiefDescription:
+CovetDescription:
 	text "An attack that may"
 	next "steal a held item."
 	done
@@ -1091,6 +1531,7 @@ CurseDescription:
 	done
 
 ReversalDescription:
+FlailDescription:
 	text "Stronger if the"
 	next "user's HP is low."
 	done
@@ -1101,6 +1542,7 @@ SeedBombDescription:
 	done
 
 ProtectDescription:
+DetectDescription:
 	text "Foils attack that"
 	next "turn. It may fail."
 	done
@@ -1131,6 +1573,7 @@ PowerGemDescription:
 	done
 
 RolloutDescription:
+IceBallDescription:
 	text "Attacks 5 turns"
 	next "with rising power."
 	done
@@ -1150,7 +1593,14 @@ BugBiteDescription:
 	next "eats a held Berry."
 	done
 
+PluckDescription:
+	text "Pecks the foe and"
+	next "eats a held Berry."
+	done
+
 MeanLookDescription:
+BlockDescription:
+SpiderWebDescription:
 	text "Prevents fleeing"
 	next "or switching."
 	done
@@ -1166,8 +1616,14 @@ SleepTalkDescription:
 	done
 
 HealBellDescription:
+AromatherapyDescription:
 	text "Eliminates all"
 	next "status problems."
+	done
+
+FrustrationDescription:
+	text "An attack based on"
+	next "lack of loyalty."
 	done
 
 ReturnDescription:
@@ -1176,6 +1632,7 @@ ReturnDescription:
 	done
 
 PsystrikeDescription:
+PsyshockDescription:
 	text "A wave that does"
 	next "physical damage."
 	done
@@ -1251,6 +1708,265 @@ GyroBallDescription:
 	done
 
 TrickDescription:
+SwitcherooDescription:
 	text "Swaps held items"
 	next "with the foe."
+	done
+
+WeatherBallDescription:
+	text "Changes type based"
+	next "on the weather."
+	done
+
+FireFangDescription:
+	text "May burn or"
+	next "flinch target."
+	done
+
+IceFangDescription:
+	text "May freeze or"
+	next "flinch target."
+	done
+
+ThunderFangDescription:
+	text "May paralyze or"
+	next "flinch target."
+	done
+
+PoisonFangDescription:
+	text "May badly poison"
+	next "the target."
+	done
+
+EggBombDescription:
+	text "Hurls an egg at"
+	next "the target."
+	done
+
+FairyWindDescription:
+	text "Stirs a fairy wind"
+	next "up to damage foe. "
+	done
+
+GastroAcidDescription:
+	text "Suppresses foe's"
+	next "ability."
+	done
+
+SimpleBeamDescription:
+	text "Foe's ability"
+	next "becomes Simple."
+	done
+
+WorrySeedDescription:
+	text "Foe's ability"
+	next "becomes Insomnia."
+	done
+
+RecycleDescription:
+	text "Recycles a used"
+	next "item to use again."
+	done
+
+FissureDescription:
+	text "A ground type"
+	next "one-hit KO move."
+	done
+
+GuillotineDescription:
+	text "A powerful pincer"
+	next "one-hit KO move."
+	done
+
+HornDrillDescription:
+	text "A drilling"
+	next "one-hit KO move."
+	done
+
+SheerColdDescription:
+	text "A chilling"
+	next "one-hit KO move."
+	done
+
+MagicCoatDescription:
+	text "Reflects status-"
+	next "changing moves."
+	done
+
+EruptionDescription:
+WaterSpoutDescription:
+	text "Deals more damage"
+	next "with more HP."
+	done
+
+EndeavorDescription:
+	text "Cuts the foe's HP"
+	next "down to the user's."
+	done
+
+LockOnDescription:
+MindReaderDescription:
+	text "Ensures the next"
+	next "attack will hit."
+	done
+
+SoakDescription:
+	text "Soaks the target"
+	next "into a Water-type."
+	done
+
+BurnUpDescription:
+	text "User loses its"
+	next "Fire-type."
+	done
+
+GravityDescription:
+	text "Grounds the user"
+	next "and the foe."
+	done
+
+MirrorMoveDescription:
+CopycatDescription:
+	text "Counter the foe"
+	next "with its own move."
+	done
+
+IncinerateDescription:
+	text "Destroys the foe's"
+	next "held berries."
+	done
+
+StoredPowerDescription:
+	text "Damage increases"
+	next "with stat stages."
+	done
+
+PsychoShiftDescription:
+	text "The user transfers"
+	next "its status to foe."
+	done
+
+TrumpCardDescription:
+	text "The fewer PP left,"
+	next "the more power."
+	done
+
+PaybackDescription:
+	text "Damage doubles if"
+	next "foe goes first."
+	done
+
+TauntDescription:
+	text "Taunts foe into"
+	next "only attacking."
+	done
+
+TormentDescription:
+	text "Torments foe into"
+	next "not reusing moves."
+	done
+
+YawnDescription:
+	text "Drowses foe to"
+	next "sleep next turn."
+	done
+
+MagnetRiseDescription:
+	text "Uses electricity"
+	next "to float."
+	done
+
+ThroatChopDescription:
+	text "For 2 turns, stops"
+	next "foe's sound moves."
+	done
+
+EmbargoDescription:
+	text "Prevents foe from"
+	next "using items."
+	done
+
+SnoreDescription:
+	text "Can only be used"
+	next "while asleep."
+	done
+
+PsywaveDescription:
+	text "An attack with"
+	next "variable damage."
+	done
+
+HeavySlamDescription:
+	text "Damages based on"
+	next "relative weight."
+	done
+
+ElectroBallDescription:
+	text "Damages based on"
+	next "relative speed."
+	done
+
+FuryCutterDescription:
+	text "Successive hits"
+	next "increase power."
+	done
+
+CamouflageDescription:
+	text "Alters user's type"
+	next "based on location."
+	done
+
+NaturePowerDescription:
+	text "An attack that is"
+	next "based on location."
+	done
+
+MementoDescription:
+	text "User faints and"
+	next "foe is weakened."
+	done
+
+FocusPunchDescription:
+	text "User flinches if"
+	next "hit before attack."
+	done
+
+NightmareDescription:
+	text "Sleeping foes lose"
+	next "1/4 HP every turn."
+	done
+
+IngrainDescription:
+	text "Lays roots to heal"
+	next "every turn."
+	done
+
+ImprisonDescription:
+	text "Prevents foes from"
+	next "using known moves."
+	done
+
+MegaPunchDescription:
+	text "A strong punch"
+	next "thrown very hard."
+	done
+
+MegaKickDescription:
+	text "A strong kick with"
+	next "intense force."
+	done
+
+SlamDescription:
+	text "Slams the foe with"
+	next "a tail, vine, etc."
+	done
+
+KinesisDescription:
+	text "Distracts foe to"
+	next "lower accuracy."
+	done
+
+ViseGripDescription:
+	text "Grips the foe with"
+	next "powerful pincers."
 	done

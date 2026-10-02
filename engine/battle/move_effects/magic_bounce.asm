@@ -1,9 +1,17 @@
 BattleCommand_bounceback:
-; Possibly bounce back an attack with Magic Bounce
+; Possibly bounce back an attack with Magic Bounce or Magic Coat
+	ld a, BATTLE_VARS_SUBSTATUS3_OPP
+	call GetBattleVar
+	bit SUBSTATUS_MAGIC_COAT, a
+	ld c, 0
+	jr nz, .bounce
+	inc c
+
 	call GetOpponentAbilityAfterMoldBreaker
 	cp MAGIC_BOUNCE
 	ret nz
 
+.bounce
 	; Someone behind Protect will not bounceback
 	ld a, [wAttackMissed]
 	cp ATKFAIL_PROTECT
@@ -14,14 +22,21 @@ BattleCommand_bounceback:
 	call CheckHiddenOpponent
 	ret nz
 
+	push bc
 	; Some moves bypass Substitute
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
 	ld hl, SubstituteBypassMoves
-	call IsInByteArray
+	ld de, 2
+	call IsInWordArray
 	jr c, .sub_ok
 
 	; Otherwise, Substitute blocks it
+	pop bc
 	call CheckSubstituteOpp
 	ret nz
+	push bc
 
 .sub_ok
 	; No infinite bouncing
@@ -44,10 +59,14 @@ BattleCommand_bounceback:
 	ld [hl], b
 	push af
 
+	ld a, c
+	and a
+	jr z, .display_text
 	push bc
 	farcall BeginAbility
 	farcall ShowAbilityActivation
 	pop bc
+.display_text
 	ld a, b
 	ld [wNamedObjectIndex], a
 	call GetMoveName

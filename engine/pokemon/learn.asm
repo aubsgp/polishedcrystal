@@ -80,8 +80,9 @@ LearnMove:
 
 	push hl
 	push de
-	ld hl, Moves + MOVE_PP
-	call GetMoveProperty
+	ld l, a
+	ld a, MOVE_PP
+	call GetMoveAttribute
 	pop de
 	pop hl
 	ld b, a
@@ -115,11 +116,32 @@ LearnMove:
 	jr nz, .done_pikachu
 	ld a, [wPutativeTMHMMove]
 	ld b, PIKACHU_FLY_FORM
-	cp FLY
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(FLY) == 0
+	and a
+	jr nz, .cphl_fly
+	ld a, l
+	assert LOW(FLY) != 0
+	cp LOW(FLY)
+.cphl_fly
+	pop hl
 	jr z, .got_form
 	assert PIKACHU_FLY_FORM + 1 == PIKACHU_SURF_FORM
 	inc b
-	cp SURF
+	ld a, [wPutativeTMHMMove]
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(SURF) == 0
+	and a
+	jr nz, .cphl_surf
+	ld a, l
+	assert LOW(SURF) != 0
+	cp LOW(SURF)
+.cphl_surf
+	pop hl
 	jr nz, .done_pikachu
 .got_form
 	ld a, [hl]

@@ -74,12 +74,6 @@ OTPartyAttr::
 	ld a, [wCurOTMon]
 	jr DoBattlePartyAttr
 
-ResetDamage::
-	xor a
-	ld [wCurDamage], a
-	ld [wCurDamage + 1], a
-	ret
-
 StackCallOpponentTurn::
 ; Falls through to SwitchTurn after inserting SwitchTurn in the call stack,
 ; so the subsequent function pointer is "wrapped" by SwitchTurns.
@@ -363,10 +357,6 @@ BattleJumptable::
 	pop bc
 	ret
 
-GetCurMoveProperty::
-	ld a, [wCurMove]
-GetMoveProperty::
-	dec a
 GetMoveAttr::
 ; Assuming hl = Moves + x, return attribute x of move a.
 	push bc
@@ -380,13 +370,8 @@ GetMoveAttr::
 GetFixedMoveStruct::
 ; a = move + 1
 ; de = destination
-	dec a
-	ld hl, Moves
-	ld bc, MOVE_LENGTH
-	rst AddNTimes
-	ld a, BANK(Moves)
 	push de
-	call FarCopyBytes
+	call GetMoveData
 	pop hl
 	call GetFixedCategory
 	ld bc, MOVE_CATEGORY
@@ -397,17 +382,15 @@ GetFixedMoveStruct::
 GetCurMoveFixedCategory::
 	ld a, [wCurMove]
 GetMoveFixedCategory::
-	dec a
-	ld hl, Moves
-	ld bc, MOVE_LENGTH
-	rst AddNTimes
+	call GetMoveAddress
+	ldh [hTemp2], a
+	dec hl
 GetFixedCategory::
 ; return category in a without modifying hl
 ; if category is STATUS, return it
 	push hl
 	ld bc, MOVE_CATEGORY
 	add hl, bc
-	ld a, BANK(Moves)
 	call GetFarByte
 	pop hl
 	cp STATUS
@@ -422,7 +405,7 @@ GetFixedCategory::
 	push hl
 	ld bc, MOVE_TYPE
 	add hl, bc
-	ld a, BANK(Moves)
+	ldh a, [hTemp2]
 	call GetFarByte
 	pop hl
 	cp SPECIAL_TYPES
@@ -481,6 +464,11 @@ GetTrueUserAbility:
 .not_external
 	call StackCallOpponentTurn
 GetOpponentAbility::
+	ld a, BATTLE_VARS_SUBSTATUS1_OPP
+	call GetBattleVar
+	bit SUBSTATUS_ABILITY_SUPPRESSED, a
+	jr nz, .ret_none
+
 	; Get opponent ability.
 	ld a, BATTLE_VARS_ABILITY_OPP
 	call GetBattleVar
@@ -496,6 +484,7 @@ GetOpponentAbility::
 	farcall AbilityCanBeSuppressed
 	pop hl
 	ret c
+.ret_none
 	xor a
 	ret
 
@@ -615,6 +604,26 @@ HasPlayerFainted::
 CheckIfHPIsZero::
 	ld a, [hli]
 	or [hl]
+	ret
+
+GetOpponentSemiInvuln:
+	call StackCallOpponentTurn
+GetUserSemiInvuln:
+; returns opponent semi invulnerable type in a
+; sets z if opponent is not semi invulnerable
+	ld a, BATTLE_VARS_SUBSTATUS3
+	call GetBattleVar
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
+	ret z
+
+	ld hl, wPlayerSemiInvulnerableType
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .ok
+	ld hl, wEnemySemiInvulnerableType
+.ok
+	ld a, [hl]
+	and a
 	ret
 
 GetWeatherAfterOpponentUmbrella::
@@ -848,17 +857,20 @@ GetBattleAnimPointer::
 
 .Function:
 	ld a, [hli]
+	ld [wBattleAnimBank], a
+	ld a, [hli]
 	ld [wBattleAnimAddress], a
 	ld a, [hl]
 	ld [wBattleAnimAddress + 1], a
 	ret
 
 GetBattleAnimByte::
-	anonbankpush "Battle Animations"
-
-.Function:
 	push hl
 	push de
+	ldh a, [hROMBank]
+	push af
+	ld a, [wBattleAnimBank]
+	rst Bankswitch
 
 	ld hl, wBattleAnimAddress
 	ld a, [hli]
@@ -872,6 +884,9 @@ GetBattleAnimByte::
 	ld a, d
 	ld [hld], a
 	ld [hl], e
+
+	pop af
+	rst Bankswitch
 
 	pop de
 	pop hl
@@ -896,4 +911,36 @@ PushLYOverrides::
 
 	ld a, (wLYOverridesEnd - wLYOverrides) / 16
 	ldh [hLYOverrideStackCopyAmount], a
+	ret
+
+CompareMove:
+; a = move ID
+; bc = move index
+; returns z if moves are the same
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	cp b
+	ld a, l
+	pop hl
+	ret nz
+	cp c
+	ret
+
+CheckMoveInList:
+; a = move ID
+; hl = list of move indices
+; checks if the move ID in a belongs to a list of moves in hl
+; returns carry if found
+	push bc
+	push de
+	push hl
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
+	pop hl
+	ld de, 2
+	call IsInWordArray
+	pop de
+	pop bc
 	ret

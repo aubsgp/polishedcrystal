@@ -148,7 +148,8 @@ AICheckMatchupForEnemyMon:
 	; Done by setting up an arbitrary generic move and manually
 	; modifying its type
 	res 2, e
-	ld a, STRENGTH ; Arbitrary
+	ld hl, STRENGTH ; Arbitrary
+	call GetMoveIDFromIndex
 	ld [wCurPlayerMove], a
 	push de
 	call UpdateMoveData
@@ -244,7 +245,7 @@ AICheckMatchupForEnemyMon:
 	ret
 
 .set_matchup
-	call CheckTypeMatchup
+	farcall CheckTypeMatchup
 	ld a, [wTypeMatchup]
 	and a
 	ret z ; no effect

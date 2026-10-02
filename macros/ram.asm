@@ -94,7 +94,7 @@ ENDM
 MACRO savemon_struct
 \1Species::        db
 \1Item::           db
-\1Moves::          ds NUM_MOVES
+\1MovesLow::       ds NUM_MOVES
 \1ID::             dw
 \1Exp::            ds 3
 \1EVs::
@@ -125,7 +125,8 @@ MACRO savemon_struct
 \1CaughtLevel::    db
 \1CaughtLocation:: db
 \1Level::          db
-\1Extra::          ds 3 ; superfluous OT name bytes
+\1MovesHigh::      db
+\1Extra::          ds 2 ; superfluous OT name bytes
 \1Nickname::       ds MON_NAME_LENGTH - 1
 \1OT::             ds PLAYER_NAME_LENGTH - 1
 \1End::
@@ -389,7 +390,7 @@ MACRO battle_anim_struct
 \1_Index::              db
 \1_Anim01::             db
 \1_Anim02::             db
-\1_FramesetIndex::      db
+\1_FramesetIndex::      dw
 \1_FunctionIndex::      db
 \1_Anim05::             db
 \1_TileID::             db
@@ -409,7 +410,6 @@ MACRO battle_anim_struct
 \1_Anim14::             db
 \1_Anim15::             db
 \1_Anim16::             db
-\1_Anim17::             db
 ENDM
 
 MACRO battle_bg_effect

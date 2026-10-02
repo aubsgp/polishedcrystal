@@ -6,7 +6,6 @@ INCLUDE "engine/overworld/map_objects.asm"
 INCLUDE "engine/menus/intro_menu.asm"
 INCLUDE "engine/overworld/init_map.asm"
 INCLUDE "engine/menus/init_options.asm"
-INCLUDE "engine/pokemon/learn.asm"
 INCLUDE "data/items/attributes.asm"
 INCLUDE "engine/overworld/npc_movement.asm"
 INCLUDE "engine/events/happiness_egg.asm"
@@ -166,6 +165,16 @@ INCLUDE "engine/gfx/place_graphic.asm"
 SECTION "Effect Commands", ROMX
 
 INCLUDE "engine/battle/effect_commands.asm"
+
+
+SECTION "Effect Commands 2", ROMX
+
+INCLUDE "engine/battle/effect_commands_2.asm"
+
+
+SECTION "Battle Environments", ROMX
+
+INCLUDE "engine/battle/environment.asm"
 
 
 SECTION "Enemy Trainers", ROMX
@@ -477,6 +486,10 @@ SECTION "Battle Animations", ROMX
 
 INCLUDE "data/moves/animations.asm"
 
+SECTION "Battle Animations 2", ROMX
+
+INCLUDE "data/moves/animations_2.asm"
+
 
 SECTION "Sine", ROMX
 
@@ -490,8 +503,12 @@ INCLUDE "engine/battle_anims/core.asm"
 INCLUDE "data/battle_anims/objects.asm"
 INCLUDE "engine/battle_anims/helpers.asm"
 INCLUDE "data/battle_anims/framesets.asm"
-INCLUDE "data/battle_anims/oam.asm"
 INCLUDE "data/battle_anims/object_gfx.asm"
+
+
+SECTION "Move Animations OAM", ROMX
+INCLUDE "engine/battle_anims/anim_oam.asm"
+INCLUDE "data/battle_anims/oam.asm"
 
 
 SECTION "Move Animation Functions", ROMX
@@ -736,3 +753,13 @@ INCLUDE "audio/music/printer.asm"
 SECTION "LureMenu", ROMX
 
 INCLUDE "engine/menus/lure_menu.asm"
+
+
+SECTION "Learn Move", ROMX
+
+INCLUDE "engine/pokemon/learn.asm"
+
+
+SECTION "16-bit ID stuff", ROMX
+
+INCLUDE "engine/16/table_functions.asm"

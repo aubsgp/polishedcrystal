@@ -780,7 +780,7 @@ _CGB_MoveList:
 	ld c, 4
 	call LoadPalettes
 
-	ld hl, Moves + MOVE_TYPE
+	ld a, MOVE_TYPE
 	call GetCurMoveProperty
 	ld hl, TypeIconPals
 	add a

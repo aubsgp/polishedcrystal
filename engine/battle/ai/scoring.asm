@@ -95,7 +95,9 @@ AI_Setup:
 
 	cp EFFECT_CURSE
 	jr nz, .not_curse
+	push bc
 	call CheckIfUserIsGhostType
+	pop bc
 	jr nz, .checkmove
 	jr .statup
 
@@ -898,7 +900,7 @@ AI_Smart_Fly:
 	; Greatly encourage this move if the player is
 	; flying or underground, and slower than the enemy.
 	ld a, [wPlayerSubStatus3]
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	jr z, AI_Smart_AvoidIfProtect
 
 	call AICompareSpeed
@@ -977,7 +979,17 @@ AI_Smart_SpeedDownHit:
 ; Player is faster than enemy.
 
 	ld a, [wEnemyMoveStruct + MOVE_ANIM]
-	cp ICY_WIND
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(ICY_WIND) == 0
+	and a
+	jr nz, .cphl_icy_wind
+	ld a, l
+	assert LOW(ICY_WIND) != 0
+	cp LOW(ICY_WIND)
+.cphl_icy_wind
+	pop hl
 	ret nz
 	call AICheckEnemyQuarterHP
 	ret nc
@@ -1150,7 +1162,7 @@ AI_Smart_Encore:
 	push hl
 	ld a, [wPlayerSelectedMove]
 	ld hl, EncoreMoves
-	call IsInByteArray
+	call CheckMoveInList
 	pop hl
 	jr nc, .discourage
 
@@ -1282,7 +1294,7 @@ AI_Smart_PriorityHit:
 
 ; Dismiss this move if the player is flying or underground.
 	ld a, [wPlayerSubStatus3]
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	jmp nz, AIDiscourageMove
 
 ; Greatly encourage this move if it will KO the player.
@@ -1312,7 +1324,7 @@ AI_Smart_Disable:
 	push hl
 	ld a, [wPlayerSelectedMove]
 	ld hl, UsefulMoves
-	call IsInByteArray
+	call CheckMoveInList
 
 	pop hl
 	jr nc, .notencourage
@@ -1719,11 +1731,24 @@ AI_Smart_Earthquake:
 
 ; Greatly encourage this move if the player is underground and the enemy is faster.
 	ld a, [wPlayerSelectedMove]
-	cp DIG
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(DIG) == 0
+	and a
+	jr nz, .cphl_dig
+	ld a, l
+	assert LOW(DIG) != 0
+	cp LOW(DIG)
+.cphl_dig
+	pop hl
 	ret nz
 
 	ld a, [wPlayerSubStatus3]
-	bit SUBSTATUS_UNDERGROUND, a
+	bit SUBSTATUS_SEMI_INVULNERABLE, a
+	jr z, .could_dig
+	ld a, [wPlayerSemiInvulnerableType]
+	bit SEMI_INVULNERABLE_DIGGING_F, a
 	jr z, .could_dig
 
 	call AICompareSpeed
@@ -1892,18 +1917,31 @@ AI_Smart_JumpKick:
 
 	; Check if the player is semi-invulnerable
 	ld a, [wPlayerSubStatus3]
-	and SEMI_INVULNERABLE_MASK
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	ret z
 	jmp AIDiscourageMove
 
 AI_Smart_Gust:
 ; Greatly encourage this move if the player is flying and the enemy is faster.
 	ld a, [wPlayerSelectedMove]
-	cp FLY
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(FLY) == 0
+	and a
+	jr nz, .cphl_fly
+	ld a, l
+	assert LOW(FLY) != 0
+	cp LOW(FLY)
+.cphl_fly
+	pop hl
 	ret nz
 
 	ld a, [wPlayerSubStatus3]
-	bit SUBSTATUS_FLYING, a
+	bit SUBSTATUS_SEMI_INVULNERABLE, a
+	jr z, .couldFly
+	ld a, [wPlayerSemiInvulnerableType]
+	bit SEMI_INVULNERABLE_FLYING_F, a
 	jr z, .couldFly
 
 	call AICompareSpeed
@@ -1935,7 +1973,7 @@ AI_Smart_FutureSight:
 	ret nc
 
 	ld a, [wPlayerSubStatus3]
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	ret z
 
 	dec [hl]
@@ -2183,7 +2221,7 @@ AI_Opportunist:
 	push de
 	push bc
 	ld hl, StallMoves
-	call IsInByteArray
+	call CheckMoveInList
 
 	pop bc
 	pop de
@@ -2350,7 +2388,11 @@ AIDamageCalc:
 	ld a, [wEnemyMoveStruct + MOVE_EFFECT]
 	cp EFFECT_MULTI_HIT
 	jr z, .multihit
+	cp EFFECT_SCALE_SHOT
+	jr z, .multihit
 	cp EFFECT_DOUBLE_HIT
+	jr z, .doublehit
+	cp EFFECT_TWINEEDLE
 	jr z, .doublehit
 	cp EFFECT_GYRO_BALL
 	jr z, .gyro_ball
@@ -2457,7 +2499,7 @@ AI_Cautious:
 	push de
 	push bc
 	ld hl, ResidualMoves
-	call IsInByteArray
+	call CheckMoveInList
 
 	pop bc
 	pop de

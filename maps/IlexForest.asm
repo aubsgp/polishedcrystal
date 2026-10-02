@@ -387,7 +387,7 @@ IlexForestTutorHeadbuttScript:
 	writetext Text_IlexForestTutorQuestion
 	yesorno
 	iffalsefwd .TutorRefused
-	setval HEADBUTT
+	setval16 HEADBUTT
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove

@@ -156,7 +156,7 @@ CherrygroveBayTutorEarthPowerScript:
 	writetext Text_CherrygroveBayTutorQuestion
 	yesorno
 	iffalsefwd .TutorRefused
-	setval EARTH_POWER
+	setval16 EARTH_POWER
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove
@@ -269,10 +269,10 @@ CherrygroveBayFisherText:
 
 	para "Oh! And I also saw"
 	line "some really big"
-	
+
 	para "birds the other"
 	line "day."
-	
+
 	para "I think they were"
 	line "headed to that big"
 	cont "ol' tree nearby?"

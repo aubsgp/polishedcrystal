@@ -1,4 +1,5 @@
 ReinitBattleAnimFrameset:
+; Does not support 16 bit framesets
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
 	ld [hl], a
@@ -88,8 +89,9 @@ GetBattleAnimFrame:
 .GetPointer:
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
-	ld e, [hl]
-	ld d, 0
+	ld a, [hli]
+	ld d, [hl]
+	ld e, a
 	ld hl, BattleAnimFrameData
 	add hl, de
 	add hl, de
@@ -104,13 +106,6 @@ GetBattleAnimFrame:
 	add l
 	ld l, a
 	ld h, 0
-	add hl, de
-	ret
-
-GetBattleAnimOAMPointer:
-	ld de, BattleAnimOAMData
-	add hl, hl
-	add hl, hl
 	add hl, de
 	ret
 

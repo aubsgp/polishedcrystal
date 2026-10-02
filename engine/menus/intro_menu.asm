@@ -123,6 +123,16 @@ ResetWRAM_NotPlus:
 	ret
 
 ResetWRAM:
+	ld a, BANK("16-bit WRAM tables")
+	ldh [rSVBK], a
+	xor a
+	ld hl, wMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	rst ByteFill
+
+	ld a, BANK(wGameData)
+	ldh [rSVBK], a
+
 	ld hl, wShadowOAM
 	ld bc, wMusic - wShadowOAM
 	xor a
@@ -258,8 +268,16 @@ endr
 	farcall InitDecorations
 
 	farcall DeletePartyMonMail
-
-	jmp ResetGameTime
+; fallthrough
+ResetGameTime::
+	xor a
+	ld [wGameTimeCap], a
+	ld [wGameTimeHours], a
+	ld [wGameTimeHours + 1], a
+	ld [wGameTimeMinutes], a
+	ld [wGameTimeSeconds], a
+	ld [wGameTimeFrames], a
+	ret
 
 _ResetWRAM_InitList:
 ; Loads 0 in the count and -1 in the first item or mon slot.
@@ -359,8 +377,7 @@ Continue:
 	call CloseWindow
 	call ClearTileMap
 	farcall ClearSavedObjPals
-	ld c, 20
-	call DelayFrames
+	farcall FixPlayerEVsAndStats
 	farcall JumpRoamMons
 	farcall ClockContinue ; time-related
 	ld a, [wSpawnAfterChampion]

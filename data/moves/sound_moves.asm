@@ -1,12 +1,16 @@
 SoundMoves::
-	db BUG_BUZZ
-	db DISARM_VOICE
-	db GROWL
-	db HYPER_VOICE
-	db PERISH_SONG
-	db ROAR
-	db SCREECH
-	db SING
-	db SUPERSONIC
-	db HEAL_BELL
+	dw BUG_BUZZ
+	dw DISARM_VOICE
+	dw GROWL
+	dw HYPER_VOICE
+	dw PERISH_SONG
+	dw ROAR
+	dw SCREECH
+	dw SING
+	dw SNARL
+	dw SNORE
+	dw SUPERSONIC
+	dw HEAL_BELL
+	dw METAL_SOUND
+	dw YAWN
 	db -1

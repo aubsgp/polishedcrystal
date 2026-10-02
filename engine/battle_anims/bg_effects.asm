@@ -107,6 +107,7 @@ DoBattleBGEffectFunction:
 	dw BattleBGEffect_ShakeScreenX
 	dw BattleBGEffect_ShakeScreenY
 	dw BattleBGEffect_Withdraw
+	dw BattleBGEffect_WithdrawAll
 	dw BattleBGEffect_BounceDown
 	dw BattleBGEffect_Dig
 	dw BattleBGEffect_Tackle
@@ -127,6 +128,7 @@ DoBattleBGEffectFunction:
 	dw BattleBGEffect_VibrateMon
 	dw BattleBGEffect_WobblePlayer
 	dw BattleBGEffect_WobbleScreen
+	dw BattleBGEffect_HoverDown
 	dw BattleBGEffect_ShakeMonX
 	dw BattleBGEffect_ShakeMonY
 
@@ -1236,6 +1238,53 @@ BattleBGEffect_Withdraw:
 	ld [hl], a
 	ret
 
+BattleBGEffect_WithdrawAll:
+	call BattleBGEffects_AnonJumptable
+.anon_dw
+	dw .zero
+	dw .one
+	dw .two
+
+.zero
+	call BattleBGEffects_IncrementJumptable
+	call BattleBGEffects_ClearLYOverrides
+	ld hl, rIE
+	set B_IE_STAT, [hl]
+	ld a, $42
+	ldh [hLCDCPointer], a
+	xor a
+	ldh [hLYOverrideStart], a
+	ld a, $60
+	ldh [hLYOverrideEnd], a
+	ret
+
+.one
+	ld hl, BG_EFFECT_STRUCT_PARAM
+	add hl, bc
+	ld a, [hl]
+	and $3f
+	ld d, a
+	ld hl, BG_EFFECT_STRUCT_BATTLE_TURN
+	add hl, bc
+	ld a, [hl]
+	cp d
+	ret nc
+	call BGEffect_DisplaceLYOverridesBackup
+	ld hl, BG_EFFECT_STRUCT_PARAM
+	add hl, bc
+	ld a, [hl]
+	rlca
+	rlca
+	and $3
+	ld hl, BG_EFFECT_STRUCT_BATTLE_TURN
+	add hl, bc
+	add [hl]
+	ld [hl], a
+	ret
+
+.two
+	jmp BattleAnim_ResetLCDStatCustom
+
 BattleBGEffect_Dig:
 	call BattleBGEffects_AnonJumptable
 .anon_dw
@@ -1398,10 +1447,14 @@ Tackle_BGEffect25_2d_two:
 Rollout_FillLYOverridesBackup:
 	push af
 	ld a, [wFXAnimIDHi]
-	or a
+	if HIGH(ROLLOUT)
+		cp HIGH(ROLLOUT)
+	else
+		or a
+	endc
 	jr nz, .not_rollout
 	ld a, [wFXAnimIDLo]
-	cp ROLLOUT
+	cp LOW(ROLLOUT)
 	jr z, .rollout
 .not_rollout
 	pop af
@@ -1949,6 +2002,53 @@ BattleBGEffect_ShakeScreenX:
 	xor a
 .skip
 	ldh [hSCX], a
+	ret
+
+BattleBGEffect_HoverDown:
+	call BattleBGEffects_AnonJumptable
+.anon_dw
+	dw .zero
+	dw .one
+	dw BattleAnim_ResetLCDStatCustom
+
+.zero
+	call BattleBGEffects_IncrementJumptable
+	call BattleBGEffects_ClearLYOverrides
+	ld hl, rIE
+	set B_IE_STAT, [hl]
+	ld a, LOW(rSCY)
+	call BattleBGEffect_SetLCDStatCustoms2
+	ldh a, [hLYOverrideEnd]
+	inc a
+	ldh [hLYOverrideEnd], a
+	ld hl, BG_EFFECT_STRUCT_BATTLE_TURN
+	add hl, bc
+	ld [hl], $1
+	ld hl, BG_EFFECT_STRUCT_PARAM
+	add hl, bc
+	ld [hl], $20
+	ret
+
+.one
+	ld hl, BG_EFFECT_STRUCT_BATTLE_TURN
+	add hl, bc
+	ld a, [hl]
+	cp $38
+	ret nc
+	push af
+	ld hl, BG_EFFECT_STRUCT_PARAM
+	add hl, bc
+	ld a, [hl]
+	ld d, $5
+	farcall Cosine
+	add $5
+	ld d, a
+	pop af
+	add d
+	call BGEffect_DisplaceLYOverridesBackup
+	ld hl, BG_EFFECT_STRUCT_PARAM
+	add hl, bc
+	inc [hl]
 	ret
 
 BattleBGEffect_ShakeMonY:
@@ -2704,7 +2804,7 @@ BGEffect_CheckMonVisible:
 	ld hl, wEnemySubStatus3
 .got_substatus
 	ld a, [hld]
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	ret nz
 	bit SUBSTATUS_FAINTED, [hl]
 	ret

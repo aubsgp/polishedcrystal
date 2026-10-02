@@ -167,7 +167,7 @@ ReadTrainerParty:
 ; moves?
 	ld a, [wOtherTrainerType]
 	bit TRNTYPE_MOVES, a
-	jr z, .not_moves
+	jmp z, .not_moves
 
 	push hl
 	ld a, [wOTPartyCount]
@@ -179,14 +179,42 @@ ReadTrainerParty:
 	ld e, l
 	pop hl
 
+	call GetNextTrainerDataByte
+	ld c, a
 	ld b, NUM_MOVES
 .copy_moves
+	push bc
+	push hl
 	call GetNextTrainerDataByte
+	ld l, a
+	ld a, c
+	and %11
+	ld h, a
+	ld b, h
+	ld c, l
+	call GetMoveIDFromIndex
+	pop hl
+	inc hl
 	ld [de], a
 	inc de
-	cp RETURN
-	jr z, .return
-	cp GYRO_BALL
+	ld a, b
+	assert HIGH(RETURN) == 0
+	and a
+	jr nz, .cpbc_return
+	ld a, c
+	assert LOW(RETURN) != 0
+	cp LOW(RETURN)
+.cpbc_return
+	jr z, .return ; will pop bc after this
+	ld a, b
+	assert HIGH(GYRO_BALL) == 0
+	and a
+	jr nz, .cpbc_gyro_ball
+	ld a, c
+	assert LOW(GYRO_BALL) != 0
+	cp LOW(GYRO_BALL)
+.cpbc_gyro_ball
+	pop bc
 	jr nz, .done_special_moves
 
 	; Set speed EVs and IVs to 0
@@ -214,6 +242,7 @@ ReadTrainerParty:
 	jr .done_special_moves
 
 .return
+	pop bc ; poped bc from .copy_moves
 	; Maximize happiness
 	push hl
 	push de
@@ -229,6 +258,8 @@ ReadTrainerParty:
 	pop hl
 
 .done_special_moves
+	srl c
+	srl c
 	dec b
 	jr nz, .copy_moves
 

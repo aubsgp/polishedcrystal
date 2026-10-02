@@ -174,6 +174,7 @@
 	const DRAGONITE  ; 95
 	const MEWTWO     ; 96
 	const MEW        ; 97
+DEF NUM_KANTO_POKEMON EQU const_value - 1
 	const CHIKORITA  ; 98
 	const BAYLEEF    ; 99
 	const MEGANIUM   ; 9a
@@ -274,6 +275,7 @@
 	const LUGIA      ; f9
 	const HO_OH      ; fa
 	const CELEBI     ; fb
+DEF NUM_JOHTO_POKEMON EQU const_value - 1
 	const AZURILL    ; fc
 	const WYNAUT     ; fd
 	const AMBIPOM    ; fe

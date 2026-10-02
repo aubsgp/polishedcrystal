@@ -37,8 +37,10 @@ SaveAfterLinkTrade:
 	call SetWRAMStateForSave
 	call StageRTCTimeForSave
 	call SavePokemonData
+	call SaveIndexTables
 	call SaveChecksum
 	call SaveBackupPokemonData
+	call SaveBackupIndexTables
 	call SaveBackupChecksum
 	farcall BackupPartyMonMail
 	call SaveRTC
@@ -167,6 +169,7 @@ SaveGameData::
 	call SaveOptions
 	call SavePlayerData
 	call SavePokemonData
+	call SaveIndexTables
 
 	; This function is never called mid-Battle Tower (only in the beginning).
 	; So this is always a safe action, and gets rid of potential old BT state
@@ -205,6 +208,7 @@ WriteBackupSave:
 	call SaveBackupOptions
 	call SaveBackupPlayerData
 	call SaveBackupPokemonData
+	call SaveBackupIndexTables
 	call SaveBackupChecksum
 
 	; Finished saving.
@@ -317,7 +321,35 @@ SavePokemonData:
 	rst CopyBytes
 	jmp CloseSRAM
 
+SaveIndexTables:
+	; saving is already a long operation, so take the chance to GC the table
+	farcall ForceGarbageCollection
+	ldh a, [rSVBK]
+	push af
+	ld a, BANK("16-bit WRAM tables")
+	ldh [rSVBK], a
+	ld a, BANK(sMoveIndexTable)
+	call GetSRAMBank
+	ld hl, wMoveIndexTable
+	ld de, sMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	rst CopyBytes
+	pop af
+	ldh [rSVBK], a
+	jmp CloseSRAM
+
 SaveChecksum:
+	ld a, BANK(sMoveIndexTable)
+	call GetSRAMBank
+	ld hl, sMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	call Checksum
+	ld a, BANK(sConversionTableChecksum)
+	call GetSRAMBank
+	ld hl, sConversionTableChecksum
+	ld a, e
+	ld [hli], a
+	ld [hl], d
 	ld hl, sGameData
 	ld bc, sGameDataEnd - sGameData
 	ld a, BANK(sGameData)
@@ -371,7 +403,33 @@ SaveBackupPokemonData:
 	rst CopyBytes
 	jmp CloseSRAM
 
+SaveBackupIndexTables:
+	ld a, BANK(sBackupMoveIndexTable)
+	call GetSRAMBank
+	ldh a, [rSVBK]
+	push af
+	ld a, BANK("16-bit WRAM tables")
+	ldh [rSVBK], a
+	ld hl, wMoveIndexTable
+	ld de, sBackupMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	rst CopyBytes
+	pop af
+	ldh [rSVBK], a
+	jmp CloseSRAM
+
 SaveBackupChecksum:
+	ld a, BANK(sBackupMoveIndexTable)
+	call GetSRAMBank
+	ld hl, sBackupMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	call Checksum
+	ld a, BANK(sBackupConversionTableChecksum)
+	call GetSRAMBank
+	ld hl, sBackupConversionTableChecksum
+	ld a, e
+	ld [hli], a
+	ld [hl], d
 	ld hl, sBackupGameData
 	ld bc, sBackupGameDataEnd - sBackupGameData
 	ld a, BANK(sBackupGameData)
@@ -406,6 +464,7 @@ TryLoadSaveFile:
 	jr nz, .backup
 	call LoadPlayerData
 	call LoadPokemonData
+	call LoadIndexTables
 
 	; If a mid-save was aborted but main save data is good, finish it.
 	call WasMidSaveAborted
@@ -423,6 +482,7 @@ TryLoadSaveFile:
 	jr nz, .corrupt
 	call LoadBackupPlayerData
 	call LoadBackupPokemonData
+	call LoadBackupIndexTables
 	farcall RestorePartyMonMail
 	call LoadStorageSystem
 	call SaveGameData
@@ -561,6 +621,21 @@ LoadPokemonData:
 	rst CopyBytes
 	jmp CloseSRAM
 
+LoadIndexTables:
+	ldh a, [rSVBK]
+	push af
+	ld a, BANK("16-bit WRAM tables")
+	ldh [rSVBK], a
+	ld a, BANK(sMoveIndexTable)
+	call GetSRAMBank
+	ld hl, sMoveIndexTable
+	ld de, wMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	rst CopyBytes
+	pop af
+	ldh [rSVBK], a
+	jmp CloseSRAM
+
 VerifyChecksum:
 	ld hl, sGameData
 	ld bc, sGameDataEnd - sGameData
@@ -572,6 +647,25 @@ VerifyChecksum:
 	jr nz, .fail
 	ld a, [sChecksum + 1]
 	cp d
+	jr nz, .fail
+	ld a, BANK(sConversionTableChecksum)
+	call GetSRAMBank
+	ld hl, sConversionTableChecksum
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	push hl
+	ld a, BANK(sMoveIndexTable)
+	call GetSRAMBank
+	ld hl, sMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	call Checksum
+	pop hl
+	ld a, d
+	cp h
+	jr nz, .fail
+	ld a, e
+	cp l
 .fail
 	push af
 	call CloseSRAM
@@ -600,6 +694,21 @@ LoadBackupPokemonData:
 	rst CopyBytes
 	jmp CloseSRAM
 
+LoadBackupIndexTables:
+	ldh a, [rSVBK]
+	push af
+	ld a, BANK("16-bit WRAM tables")
+	ldh [rSVBK], a
+	ld a, BANK(sBackupMoveIndexTable)
+	call GetSRAMBank
+	ld hl, sBackupMoveIndexTable
+	ld de, wMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	rst CopyBytes
+	pop af
+	ldh [rSVBK], a
+	jmp CloseSRAM
+
 VerifyBackupChecksum:
 	ld hl, sBackupGameData
 	ld bc, sBackupGameDataEnd - sBackupGameData
@@ -611,6 +720,25 @@ VerifyBackupChecksum:
 	jr nz, .fail
 	ld a, [sBackupChecksum + 1]
 	cp d
+	jr nz, .fail
+	ld a, BANK(sBackupConversionTableChecksum)
+	call GetSRAMBank
+	ld hl, sBackupConversionTableChecksum
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	push hl
+	ld a, BANK(sBackupMoveIndexTable)
+	call GetSRAMBank
+	ld hl, sBackupMoveIndexTable
+	ld bc, wMoveIndexTableEnd - wMoveIndexTable
+	call Checksum
+	pop hl
+	ld a, d
+	cp h
+	jr nz, .fail
+	ld a, e
+	cp l
 .fail
 	push af
 	call CloseSRAM

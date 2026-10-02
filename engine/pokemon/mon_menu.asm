@@ -1081,7 +1081,7 @@ MoveScreenLoop:
 	rrca
 	jr c, .pressed_start
 	rrca
-	jr c, .pressed_right
+	jmp c, .pressed_right
 	rrca
 	jmp c, .pressed_left
 	rrca
@@ -1105,6 +1105,52 @@ MoveScreenLoop:
 	add hl, bc
 	ld a, [hl]
 	ld [wMoveScreenSelectedMove], a
+
+	push de
+	push bc
+	ld a, [wMoveScreenMode]
+	cp MOVESCREEN_NEWMOVE
+	jr nz, .ok
+	ld a, c
+	cp 4 ; selected new move
+	jr z, .ok
+
+	; Certain HMs introduce potential for accidental softlocks if forgotten
+	; at bad spots. There are other softlock situations, but they require
+	; releasing Pokémon, and isn't really something the player does by accident.
+	; This failsafe only kicks in if the player doesn't carry the HM.
+	; Players can skip HM acquisition by trade or New Game+. Some Pokémon also
+	; learn HMs naturally (notably Machamp with Strength).
+	ld a, [hl]
+
+	; Player surfs to a tiny island, forgets surf, can't re-surf.
+	cp SURF
+	ld e, HM_SURF
+	jr z, .checkhm
+
+	; Players forgetting Strength mid-puzzle.
+	cp STRENGTH
+	ld e, HM_STRENGTH
+	jr z, .checkhm
+
+	; Whirlpool implies surf, but not all water have wild encounters.
+	; This is just in case a whirlpool is added to one such location.
+	cp WHIRLPOOL
+	ld e, HM_WHIRLPOOL
+	jr nz, .ok
+	; Other HMs (Cut, Fly, Flash, Waterfall) can't softlock the player.
+
+.checkhm
+	call _CheckTMHM
+	jr c, .ok
+	pop bc
+	pop de
+	ld hl, Text_CantForgetHM
+	call PrintTextNoBox
+	jr .outer_loop
+.ok
+	pop bc
+	pop de
 	ld a, c
 	inc a
 	and a
@@ -1117,11 +1163,11 @@ MoveScreenLoop:
 	ret z
 	xor a
 	ld [wMoveSwapBuffer], a
-	jr .outer_loop
+	jmp .outer_loop
 .pressed_select
 	ld a, [wMoveScreenMode]
 	and a
-	jr nz, .loop
+	jmp nz, .loop
 .swap_move
 	; check if we are in swap mode
 	ld a, [wMoveSwapBuffer]
@@ -1130,7 +1176,7 @@ MoveScreenLoop:
 	ld a, [wMoveScreenCursor]
 	inc a
 	ld [wMoveSwapBuffer], a
-	jr .outer_loop
+	jmp .outer_loop
 .pressed_right
 	ld a, [wMoveScreenMode]
 	and a
@@ -1330,12 +1376,18 @@ MoveScreenLoop:
 	ld [de], a
 	ret
 
+.HMMoves:
+	db SURF, HM_SURF ; can leave players stuck at tiny islands w/o encounters
+	db STRENGTH, HM_STRENGTH ; problem spots have wilds, but just in case
+	db WHIRLPOOL, HM_WHIRLPOOL ; just in case there are wild-less whirlpools
+
 .MustSaveFirst:
 	text "Please save the"
 	line "game first."
 	prompt
 
 GetForgottenMoves::
+	; TODO: 16bit moves
 ; retrieve a list of a mon's forgotten moves, excluding ones beyond level
 ; and moves the mon already knows
 	; c = species
@@ -1350,9 +1402,7 @@ GetForgottenMoves::
 	; bc = index
 	predef GetEvosAttacksPointer
 .skip_evos
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
+	farcall GetNextEvoAttackByte
 	inc a
 	jr nz, .skip_evos
 
@@ -1365,16 +1415,12 @@ GetForgottenMoves::
 	pop hl
 	inc b ; so that we can use jr nc
 .loop
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
+	farcall GetNextEvoAttackByte
 	and a
 	ret z
 	cp b
 	ret nc
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
+	farcall GetNextEvoAttackByte
 
 	; exclude moves the user already knows
 	push hl
@@ -1491,8 +1537,9 @@ MoveScreen_ListMoves:
 .defaultpp_loop
 	ld a, [hli]
 	push hl
-	ld hl, Moves + MOVE_PP
-	call GetMoveProperty
+	ld l, a
+	ld a, MOVE_PP
+	call GetMoveAttribute
 	pop hl
 	ld [de], a
 	inc de
@@ -1618,7 +1665,7 @@ MoveScreen_ListMovesFast:
 	ld [hli], a
 	ld [hl], $5a
 
-	ld hl, Moves + MOVE_TYPE
+	ld a, MOVE_TYPE
 	call GetCurMoveProperty
 	pop bc
 	ld c, a
@@ -1645,7 +1692,7 @@ MoveScreen_ListMovesFast:
 	ld [hli], a
 	ld [hl], $5e
 
-	ld hl, Moves + MOVE_POWER
+	ld a, MOVE_POWER
 	call GetCurMoveProperty
 	hlcoord 10, 12
 	cp 2
@@ -1660,7 +1707,7 @@ MoveScreen_ListMovesFast:
 	rst PlaceString
 
 .place_accuracy
-	ld hl, Moves + MOVE_ACC
+	ld a, MOVE_ACC
 	call GetCurMoveProperty
 	hlcoord 15, 12
 	cp -1
@@ -1686,3 +1733,7 @@ String_na:
 
 String_PowAcc:
 	db "   <BOLDP>/   %@"
+
+Text_CantForgetHM:
+	text_far _MoveCantForgetHMText
+	text_end

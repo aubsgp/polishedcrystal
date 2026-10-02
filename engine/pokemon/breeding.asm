@@ -454,6 +454,7 @@ SwitchParentAddr:
 	ret
 
 InitEggMoves:
+; TODO: 16bit moves
 ; Order of move inheritance in VII:
 ; * Default moves at level 1
 ; * Inherited level up moves (both parents must know it)
@@ -554,22 +555,25 @@ InheritLevelMove:
 	; bc = index
 	predef GetEvosAttacksPointer
 .loop
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
+	farcall GetNextEvoAttackByte
 	inc a
 	jr nz, .loop
 .loop2
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
+	farcall GetNextEvoAttackByte
 	inc a
 	ret z
-	inc hl
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
+	farcall GetNextEvoAttackByte
+	push bc
+	ld b, a
+	farcall GetNextEvoAttackByte
+	push hl
+	ld h, a
+	ld l, b
+	call GetMoveIDFromIndex
+	pop hl
+	pop bc
 	cp d
 	jr z, InheritMove
-	inc hl
 	jr .loop2
 
 InheritEggMove:
@@ -592,12 +596,22 @@ InheritEggMove:
 	inc hl
 .loop
 	ld a, BANK(EggSpeciesMoves)
-	call GetFarByte
-	inc a
+	push hl
+	call GetFarWord
+	ld b, h
+	ld c, l
+	pop hl
+	ld a, b
+	or c
 	ret z
-	dec a
+	push hl
+	ld h, b
+	ld l, c
+	call GetMoveIDFromIndex
+	pop hl
 	cp d
 	jr z, InheritMove
+	inc hl
 	inc hl
 	jr .loop
 

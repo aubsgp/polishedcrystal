@@ -1833,9 +1833,18 @@ CamperGroup:
 	end_trainer
 
 	def_trainer IVAN, "Ivan"
+if DEF(DEBUG)
+	tr_mon 34, GEODUDE @ LUM_BERRY
+		tr_moves STICKY_WEB, NO_MOVE, NO_MOVE, NO_MOVE
+	tr_mon 34, PIDGEY @ LUM_BERRY
+		tr_moves WATER_SPOUT, NO_MOVE, NO_MOVE, NO_MOVE
+	tr_mon 34, HOUNDOOM @ ORAN_BERRY
+		tr_moves FISSURE, SHADOW_BALL, NO_MOVE, NO_MOVE
+else
 	tr_mon 11, DIGLETT
 	tr_mon 11, ZUBAT
 	tr_mon 15, DIGLETT
+endc
 	end_trainer
 
 	def_trainer BARRY, "Barry"

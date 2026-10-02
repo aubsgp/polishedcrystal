@@ -2387,14 +2387,39 @@ _BattleTookSunlightText::
 	line "took in sunlight!"
 	prompt
 
+SECTION "_BattleLoweredHeadText", ROMX
+_BattleLoweredHeadText::
+	line "lowered its head!"
+	prompt
+
+SECTION "_BattleGlowingText", ROMX
+_BattleGlowingText::
+	line "is glowing!"
+	prompt
+
+SECTION "_BattleMadeAWhirlwindText", ROMX
+_BattleMadeAWhirlwindText::
+	line "made a whirlwind!"
+	prompt
+
 SECTION "_BattleFlewText", ROMX
 _BattleFlewText::
 	line "flew up high!"
 	prompt
 
+SECTION "_BattleBouncedText", ROMX
+_BattleBouncedText::
+	line "sprang up!"
+	prompt
+
 SECTION "_BattleDugText", ROMX
 _BattleDugText::
 	line "dug a hole!"
+	prompt
+
+SECTION "_BattleDoveText", ROMX
+_BattleDoveText::
+	line "dove down!"
 	prompt
 
 SECTION "Text_BreedHuh", ROMX
@@ -3871,6 +3896,12 @@ _MoveForgotText::
 	text "."
 
 	para "And…"
+	prompt
+
+SECTION "_MoveCantForgetHMText", ROMX
+_MoveCantForgetHMText::
+	text "HM moves can't be"
+	line "forgotten now."
 	prompt
 
 SECTION "_CardFlipPlayWithThreeCoinsText", ROMX

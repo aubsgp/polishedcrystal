@@ -1,22 +1,34 @@
 ; GetName types
 	const_def 0, 4
 	const TRAINER_CLASS_NAME ; 0
-	const MOVE_NAME          ; 1
-	const ITEM_NAME          ; 2
-	const KEY_ITEM_NAME      ; 3
-	const SPECIAL_ITEM_NAME  ; 4
-	const BADGE_NAME         ; 5
-	const APRICORN_NAME      ; 6
-	const WING_NAME          ; 7
-	const EXP_CANDY_NAME     ; 8
+	const ITEM_NAME          ; 1
+	const KEY_ITEM_NAME      ; 2
+	const SPECIAL_ITEM_NAME  ; 3
+	const BADGE_NAME         ; 4
+	const APRICORN_NAME      ; 5
+	const WING_NAME          ; 6
+	const EXP_CANDY_NAME     ; 7
 DEF NUM_NAME_TYPES EQU const_value / 4
 
+GetNthString16::
+; Like GetNthString, but with a 16-bit index in bc
+	inc b
+	jr .handle_loop
+.loop
+	xor a
+	call GetNthString.loop ; will act as a = $100
+.handle_loop
+	dec b
+	jr nz, .loop
+	ld a, c
+	; fallthrough
 GetNthString::
 ; Return the address of the
 ; ath string starting from hl.
 	and a
 	ret z
 
+.loop
 	push bc
 	ld b, a
 .readChar
@@ -98,10 +110,6 @@ GetCurTMHMName::
 GetTMHMName::
 	homecall _GetTMHMName
 	ret
-
-GetMoveName::
-	ld a, MOVE_NAME
-	jr GetName
 
 GetCurItemName::
 	ld a, [wCurItem]
@@ -186,7 +194,6 @@ ENDM
 ; entries correspond to *_NAME constants
 	table_width 4
 	names_list TrainerClassNames, -1
-	names_list MoveNames,         -1
 	names_list ItemNames,         0
 	names_list KeyItemNames,      0
 	names_list SpecialItemNames,  0
@@ -195,3 +202,28 @@ ENDM
 	names_list WingNames,         0
 	names_list ExpCandyNames,     -1
 	assert_table_length NUM_NAME_TYPES
+
+GetMoveName::
+	push hl
+	push bc
+	ldh a, [hROMBank]
+	push af
+	ld a, BANK(MoveNames)
+	rst Bankswitch
+	ld a, [wNamedObjectIndex]
+	call GetMoveIndexFromID
+	dec hl
+	ld b, h
+	ld c, l
+	ld hl, MoveNames
+	call GetNthString16
+	ld de, wStringBuffer1
+	push de
+	ld bc, MOVE_NAME_LENGTH
+	call CopyBytes
+	pop de
+	pop af
+	rst Bankswitch
+	pop bc
+	pop hl
+	ret

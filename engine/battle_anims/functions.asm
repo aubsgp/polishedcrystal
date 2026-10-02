@@ -114,6 +114,11 @@ DoBattleAnimFrame:
 	dw BattleAnimFunction_SpiralDescent_Fast
 	dw BattleAnimFunction_RadialMoveIn
 	dw BattleAnimFunction_NightSlash
+	dw BattleAnimFunction_RadialMoveOut_Delay
+	dw BattleAnimFunction_RadialMoveOut_VeryFast_NoStop
+	dw BattleAnimFunction_RadialMoveOut_CrossChop
+	dw BattleAnimFunction_RadialMoveOut_Slow_Clamp
+	dw BattleAnimFunction_RadialMoveOut_CP_BG
 	assert_table_length NUM_BATTLEANIMFUNCS
 
 BattleAnim_AnonJumptable:
@@ -345,14 +350,14 @@ BattleAnimFunction_PokeBall:
 	add [hl]
 	ld [hl], a
 	; ...select a new frameset, and move onto the next part of the animation
-	ld a, BATTLEANIMFRAMESET_0B
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_3
 	call FarReinitBattleAnimFrameset
 	jmp BattleAnim_IncAnonJumptableIndex
 
 .prepare_bounce
 	; initialize the parameters for the bounce; make sure this is only done once
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_09
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_1
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_VAR1
 	add hl, bc
@@ -387,12 +392,12 @@ BattleAnimFunction_PokeBall:
 	ld [hl], a
 	ret nz
 	; if the bounce height became 0, load a new frameset and go to the next part of the animation
-	ld a, BATTLEANIMFRAMESET_0C
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_4
 	call FarReinitBattleAnimFrameset
 	jmp BattleAnim_IncAnonJumptableIndex
 
 .shake
-	ld a, BATTLEANIMFRAMESET_0D
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_5
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_JUMPTABLE_INDEX
 	add hl, bc
@@ -402,7 +407,7 @@ BattleAnimFunction_PokeBall:
 ; Bottom of the PokeBall
 .seven ; open
 	call GetBallAnimPal
-	ld a, BATTLEANIMFRAMESET_0A
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_2
 	call FarReinitBattleAnimFrameset
 	call BattleAnim_IncAnonJumptableIndex
 	ld hl, BATTLEANIMSTRUCT_VAR2
@@ -429,7 +434,7 @@ BattleAnimFunction_PokeBall:
 
 .twelve
 ; critical shake
-	ld a, BATTLEANIMFRAMESET_0C
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_4
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_VAR3
 	add hl, bc
@@ -456,7 +461,7 @@ BattleAnimFunction_PokeBall:
 	ret
 
 .done
-	ld a, BATTLEANIMFRAMESET_09
+	ld a, BATTLEANIMFRAMESET_POKE_BALL_1
 	call FarReinitBattleAnimFrameset
 	jmp BattleAnim_IncAnonJumptableIndex
 
@@ -545,7 +550,7 @@ BattleAnimFunction_Ember:
 
 .three
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_0F
+	ld a, BATTLEANIMFRAMESET_FLAMETHROWER
 	jmp FarReinitBattleAnimFrameset
 
 BattleAnimFunction_Drop:
@@ -784,7 +789,7 @@ BattleAnimFunction_FireBlast:
 
 .set_up_eight
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_10
+	ld a, BATTLEANIMFRAMESET_EMBER
 	call FarReinitBattleAnimFrameset
 .eight
 	ld hl, BATTLEANIMSTRUCT_VAR1
@@ -864,7 +869,7 @@ BattleAnimFunction_RazorLeaf:
 	add hl, bc
 	ld [hli], a
 	ld [hl], a
-	ld a, BATTLEANIMFRAMESET_17
+	ld a, BATTLEANIMFRAMESET_RAZOR_LEAF_2
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_PARAM
 	add hl, bc
@@ -1031,6 +1036,7 @@ BattleAnimFunction_RockSmash:
 	rlca
 	rlca
 	add $19
+	; Does not support 16 bit framesets
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
 	ld [hl], a
@@ -1107,7 +1113,7 @@ BattleAnimFunction_Bubble:
 	ld hl, BATTLEANIMSTRUCT_VAR1
 	add hl, bc
 	ld [hl], $0
-	ld a, BATTLEANIMFRAMESET_22
+	ld a, BATTLEANIMFRAMESET_PULSING_BUBBLE
 	call FarReinitBattleAnimFrameset
 .two
 	ld hl, BATTLEANIMSTRUCT_XCOORD
@@ -1115,6 +1121,15 @@ BattleAnimFunction_Bubble:
 	ld a, [hl]
 	cp $98
 	jr nc, .okay
+	ld de, $88 ; Assume Fast Value for Bubblebeam
+	ld hl, BATTLEANIMSTRUCT_PARAM
+	add hl, bc
+	ld a, [hl]
+	and $0f
+	dec a
+	jr z, .fast
+	ld de, $60 ; Set Slow Value if PARAM ends with 1
+.fast
 	ld hl, BATTLEANIMSTRUCT_VAR1
 	add hl, bc
 	ld a, [hl]
@@ -1122,7 +1137,6 @@ BattleAnimFunction_Bubble:
 	add hl, bc
 	ld h, [hl]
 	ld l, a
-	ld de, $60
 	add hl, de
 	ld e, l
 	ld d, h
@@ -1259,7 +1273,7 @@ BattleAnimFunction_Sing:
 	call BattleAnim_IncAnonJumptableIndex
 	ld hl, BATTLEANIMSTRUCT_PARAM
 	add hl, bc
-	ld a, BATTLEANIMFRAMESET_24
+	ld a, BATTLEANIMFRAMESET_MUSIC_NOTE_1
 	add [hl] ; offset
 	call FarReinitBattleAnimFrameset
 .one:
@@ -1313,7 +1327,7 @@ BattleAnimFunction_WaterGun:
 
 .run_down
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_28
+	ld a, BATTLEANIMFRAMESET_WATER_GUN_2
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_YOFFSET
 	add hl, bc
@@ -1330,14 +1344,14 @@ BattleAnimFunction_WaterGun:
 	ld hl, BATTLEANIMSTRUCT_YOFFSET
 	add hl, bc
 	ld a, [hl]
-	cp $18
+	cp $10
 	jr nc, .splash
 	inc [hl]
 	ret
 
 .splash
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_29
+	ld a, BATTLEANIMFRAMESET_WATER_GUN_3
 	jmp FarReinitBattleAnimFrameset
 
 BattleAnimFunction_Powder:
@@ -1444,7 +1458,7 @@ BattleAnimFunction_ThunderWave:
 
 .one:
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_35
+	ld a, BATTLEANIMFRAMESET_THUNDER_WAVE_EXTRA
 	jmp FarReinitBattleAnimFrameset
 
 BattleAnimFunction_Clamp_Encore:
@@ -1460,6 +1474,7 @@ BattleAnimFunction_Clamp_Encore:
 
 .zero:
 	call BattleAnim_IncAnonJumptableIndex
+	; Does not support 16 bit framesets
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
 	ld a, [hl]
@@ -1569,9 +1584,9 @@ BattleAnimFunction_Bite:
 	add hl, bc
 	ld [hl], a
 	bit 7, a
-	ld a, BATTLEANIMFRAMESET_3D
+	ld a, BATTLEANIMFRAMESET_BITE_2
 	jr z, .got_frameset
-	dec a ; BATTLEANIMFRAMESET_3C
+	dec a ; BATTLEANIMFRAMESET_BITE_1
 .got_frameset
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_VAR1
@@ -1797,6 +1812,7 @@ BattleAnimFunction_Wrap:
 	dw DoNothing
 
 .one:
+; Does not support 16 bit framesets
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
 	ld a, [hl]
@@ -1831,7 +1847,7 @@ BattleAnimFunction_LeechSeed:
 	jr nc, BattleAnim_StepThrownToTarget
 
 	ld [hl], $40
-	ld a, BATTLEANIMFRAMESET_57
+	ld a, BATTLEANIMFRAMESET_LEECH_SEED_2
 	call FarReinitBattleAnimFrameset
 	jmp BattleAnim_IncAnonJumptableIndex
 
@@ -1846,7 +1862,7 @@ BattleAnimFunction_LeechSeed:
 
 .flutter
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_58
+	ld a, BATTLEANIMFRAMESET_LEECH_SEED_3
 	jmp FarReinitBattleAnimFrameset
 
 BattleAnimFunction_Spikes_one:
@@ -2195,7 +2211,7 @@ BattleAnimFunction_Egg:
 	ret
 
 .seven:
-	ld a, BATTLEANIMFRAMESET_4E
+	ld a, BATTLEANIMFRAMESET_EGG_WOBBLE
 	call FarReinitBattleAnimFrameset
 	jmp BattleAnim_IncAnonJumptableIndex
 
@@ -2213,7 +2229,7 @@ BattleAnimFunction_Egg:
 	ret
 
 .nine:
-	ld a, BATTLEANIMFRAMESET_50
+	ld a, BATTLEANIMFRAMESET_EGG_CRACKED_BOTTOM
 	call FarReinitBattleAnimFrameset
 	ld hl, BATTLEANIMSTRUCT_YOFFSET
 	add hl, bc
@@ -2221,7 +2237,7 @@ BattleAnimFunction_Egg:
 	jmp BattleAnim_IncAnonJumptableIndex
 
 .eleven:
-	ld a, BATTLEANIMFRAMESET_4F
+	ld a, BATTLEANIMFRAMESET_EGG_CRACKED_TOP
 	call FarReinitBattleAnimFrameset
 	call BattleAnim_IncAnonJumptableIndex
 	ld hl, BATTLEANIMSTRUCT_VAR1
@@ -2390,7 +2406,7 @@ BattleAnimFunction_Sound:
 	ld [hl], $8
 	ld hl, BATTLEANIMSTRUCT_PARAM
 	add hl, bc
-	ld a, BATTLEANIMFRAMESET_59
+	ld a, BATTLEANIMFRAMESET_SOUND_1
 	add [hl]
 	jmp FarReinitBattleAnimFrameset
 
@@ -2454,7 +2470,7 @@ BattleAnimFunction_ConfuseRay:
 	and $80
 	rlca
 	ld [hl], a
-	add BATTLEANIMFRAMESET_5D
+	add BATTLEANIMFRAMESET_CONFUSE_RAY_1
 	jmp FarReinitBattleAnimFrameset
 
 .one:
@@ -2508,6 +2524,7 @@ BattleAnimFunction_Dizzy:
 
 .zero:
 	call BattleAnim_IncAnonJumptableIndex
+	; Does not support 16 bit framesets
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
 	ld a, [hl]
@@ -2659,7 +2676,7 @@ BattleAnimFunction_String:
 	add hl, bc
 	set 6, [hl]
 .not_param_zero
-	add BATTLEANIMFRAMESET_6A
+	add BATTLEANIMFRAMESET_STRING_SHOT_1
 	jmp FarReinitBattleAnimFrameset
 
 BattleAnimFunction_Paralyzed:
@@ -2696,7 +2713,7 @@ BattleAnimFunction_Paralyzed:
 	cpl
 	inc a
 	ld [hl], a
-	ld a, BATTLEANIMFRAMESET_6E
+	ld a, BATTLEANIMFRAMESET_PARALYZED_FLIPPED
 	jmp FarReinitBattleAnimFrameset
 
 .one:
@@ -3479,7 +3496,7 @@ BattleAnimFunction_SpeedLine:
 	add hl, bc
 	ld a, [hl]
 	and $7f
-	add BATTLEANIMFRAMESET_81
+	add BATTLEANIMFRAMESET_SPEED_LINE_1
 	call FarReinitBattleAnimFrameset
 .one:
 	ld hl, BATTLEANIMSTRUCT_PARAM
@@ -3522,7 +3539,7 @@ BattleAnimFunction_Sludge:
 
 .done
 	call BattleAnim_IncAnonJumptableIndex
-	ld a, BATTLEANIMFRAMESET_20
+	ld a, BATTLEANIMFRAMESET_SLUDGE_BUBBLE_BURST
 	call FarReinitBattleAnimFrameset
 .two:
 	ld hl, BATTLEANIMSTRUCT_YOFFSET
@@ -3633,6 +3650,7 @@ BattleAnimFunction_LockOnMindReader:
 	add hl, bc
 	ld a, [hl]
 	and $f
+	; Does not support 16 bit framesets
 	ld hl, BATTLEANIMSTRUCT_FRAMESET_ID
 	add hl, bc
 	add [hl]
@@ -3691,7 +3709,7 @@ BattleAnimFunction_HealBellNotes:
 	call BattleAnim_IncAnonJumptableIndex
 	ld hl, BATTLEANIMSTRUCT_PARAM
 	add hl, bc
-	ld a, BATTLEANIMFRAMESET_24
+	ld a, BATTLEANIMFRAMESET_MUSIC_NOTE_1
 	add [hl]
 	call FarReinitBattleAnimFrameset
 .one:
@@ -4265,12 +4283,22 @@ BattleAnimFunction_AirCutter:
 	ld a, [hl]
 	jmp BattleAnim_StepToTarget
 
+BattleAnimFunction_RadialMoveOut_Delay:
+	call BattleAnim_AnonJumptable
+	
+	dw DoNothing
+	dw BattleAnimFunction_RadialMoveOut
+;fallthrough
 BattleAnimFunction_RadialMoveOut:
 	lb de, 12, 80
 	jr BattleAnimFunc_DoRadialMoveOut
 
+BattleAnimFunction_RadialMoveOut_VeryFast_NoStop:
+	ld d, 30
+	jr BattleAnimFunc_DoRadialMoveOut_NoStop
+
 BattleAnimFunction_RadialMoveOut_Slow:
-	lb de, 3, 80
+	lb de, 3, 120
 	jr BattleAnimFunc_DoRadialMoveOut
 
 BattleAnimFunction_RadialMoveOut_VerySlow:
@@ -4336,6 +4364,155 @@ BattleAnimFunc_RadialStep:
 	add hl, bc
 	ld [hl], a
 	ret
+
+BattleAnimFunc_DoRadialMoveOut_NoStop:
+	call BattleAnim_AnonJumptable
+.anon_dw
+	dw .init
+	dw .step
+
+.init
+	call BattleAnimFunc_RadialInit
+.step
+	; fallthrough
+BattleAnimFunc_RadialStep_NoStop:
+	ld hl, BATTLEANIMSTRUCT_VAR1
+	add hl, bc
+	push bc
+	push hl
+	ld a, [hli]
+	ld c, [hl]
+	ld b, a
+	ld h, d ; speed x 2
+	ld l, 0
+	srl h
+	rr l
+	add hl, bc
+	ld a, h
+	ld c, l
+	pop hl
+	ld [hli], a
+	ld [hl], c
+	ld d, b ; used for Sine/Cosine
+	pop bc
+	ld hl, BATTLEANIMSTRUCT_PARAM
+	add hl, bc
+	ld e, [hl]
+	push de
+	ld a, e
+	farcall Sine
+	ld hl, BATTLEANIMSTRUCT_YOFFSET
+	add hl, bc
+	ld [hl], a
+	pop de
+	ld a, e
+	farcall Cosine
+	ld hl, BATTLEANIMSTRUCT_XOFFSET
+	add hl, bc
+	ld [hl], a
+	ret
+
+BattleAnimFunction_RadialMoveOut_Slow_Clamp:
+	call BattleAnim_AnonJumptable
+
+	dw InitRadial
+	dw Step_Slow
+	dw DoNothing
+
+BattleAnimFunction_RadialMoveOut_CrossChop:
+	call BattleAnim_AnonJumptable
+
+	dw InitRadial
+	dw Step
+	dw Step_VerySlow ; for Cross Chop
+	dw Step_Short ; for Cross Chop
+
+BattleAnimFunction_RadialMoveOut_CP_BG:
+	call BattleAnim_AnonJumptable
+
+	dw InitRadial
+	dw Step_CP_BG
+
+InitRadial:
+	ld hl, BATTLEANIMSTRUCT_VAR2
+	add hl, bc
+	xor a
+	ld [hld], a
+	ld [hl], a ; initial position = 0
+	jmp BattleAnim_IncAnonJumptableIndex
+
+Step:
+	call Get_Rad_Pos
+	ld hl, 6.0 ; speed
+	call Set_Rad_Pos
+	cp 80 ; final position
+	jr Rad_Move
+
+Step_Slow:
+	call Get_Rad_Pos
+	ld hl, 1.5 ; speed
+	call Set_Rad_Pos
+	cp 40 ; final position
+	jr Rad_Move
+
+Step_VerySlow:
+	call Get_Rad_Pos
+	ld hl, 0.5 ; speed
+	call Set_Rad_Pos
+	cp 40 ; final position
+	jr Rad_Move
+
+Step_Short:
+	call Get_Rad_Pos
+	ld hl, 6.0 ; speed
+	call Set_Rad_Pos
+	cp 60 ; final position
+	jr Rad_Move
+
+Step_CP_BG:
+	call Get_Rad_Pos
+	ld hl, 0.06 ; speed
+	call Set_Rad_Pos
+	cp 120 ; final position
+	jr Rad_Move
+
+Get_Rad_Pos:
+	ld hl, BATTLEANIMSTRUCT_VAR1
+	add hl, bc
+	ld a, [hli]
+	ld e, [hl]
+	ld d, a
+	ret 
+
+Set_Rad_Pos:
+	add hl, de
+	ld a, h
+	ld e, l
+	ld hl, BATTLEANIMSTRUCT_VAR1
+	add hl, bc
+	ld [hli], a
+	ld [hl], e
+	ret
+
+Rad_Move:
+	jmp nc, FarDeinitBattleAnimation
+	ld hl, BATTLEANIMSTRUCT_PARAM
+	add hl, bc
+	ld e, [hl]
+	push de
+	ld a, e
+	farcall Sine
+	ld hl, BATTLEANIMSTRUCT_YOFFSET
+	add hl, bc
+	ld [hl], a
+	pop de
+	ld a, e
+	farcall Cosine
+	ld hl, BATTLEANIMSTRUCT_XOFFSET
+	add hl, bc
+	ld [hl], a
+	ret
+
 
 BattleAnimFunc_RadialInit:
 	ld hl, BATTLEANIMSTRUCT_PARAM

@@ -187,12 +187,28 @@ BattleTurn:
 	call CheckOpponentForfeit
 	ret c
 
+	; Update selected move.
+	ld a, [wCurPlayerMove]
+	ld [wPlayerSelectedMove], a
+	ld a, [wCurEnemyMove]
+	ld [wEnemySelectedMove], a
+
 	call DetermineMoveOrder
 	; a = carry ? 0 (player first) : 1 (enemy first)
 	sbc a
 	inc a
 	ldh [hBattleTurn], a
 	ld [wEnemyGoesFirst], a
+
+	; Display tightening focus in speed order
+	; In mainline, tightening focus is +6 and should happen after switches
+	; Not implemented here
+	call .check_focus
+	call SwitchTurn
+	call .check_focus
+	call SwitchTurn
+
+	; Do moves in order
 	call .do_move
 	ret nz
 	ld a, [wEnemyGoesFirst]
@@ -221,6 +237,25 @@ BattleTurn:
 	call DeferredSwitch
 	ld a, [wBattleEnded]
 	and a
+	ret
+
+.check_focus
+	ld a, BATTLE_VARS_MOVE_ANIM
+	call GetBattleVarAddr
+	ld bc, FOCUS_PUNCH
+	call CompareMove
+	ret nz
+
+	ld hl, FOCUS_ENERGY
+	call GetMoveIDFromIndex
+	ld b, a
+	ld a, BATTLE_VARS_MOVE_ANIM
+	call GetBattleVarAddr
+	ld [hl], b
+	farcall LoadMoveAnim
+
+	ld hl, TighteningFocusText
+	call StdBattleTextbox
 	ret
 
 SafariBattleTurn:
@@ -329,7 +364,7 @@ DetermineMoveOrder:
 
 GetSpeed::
 ; Sets bc to speed after items and stat changes.
-; Fainted mons use raw speed (Tailwind and Pledge swamp isn't implemented).
+; Fainted mons use raw speed (Pledge swamp isn't implemented).
 	push hl
 	push de
 	ldh a, [hBattleTurn]
@@ -368,6 +403,16 @@ GetSpeed::
 
 .paralyze_done
 	farcall ApplySpeedAbilities
+
+	ld hl, wPlayerTeamEffects
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_tailwind
+	ld hl, wEnemyTeamEffects
+.got_tailwind
+	and TEAM_TAILWIND
+	ln a, 2, 1 ; x2
+	call nz, MultiplyAndDivide
 
 	; Apply item effects
 	predef GetUserItemAfterUnnerve
@@ -474,7 +519,7 @@ ParsePlayerAction:
 .using_move
 	ld a, [wBattleType]
 	cp BATTLETYPE_GHOST
-	jr z, .lavender_ghost
+	jmp z, .lavender_ghost
 
 	call SetPlayerTurn
 	call CheckLockedIn
@@ -486,7 +531,15 @@ ParsePlayerAction:
 	jr nz, .reset_bide
 	xor a
 	ld [wMoveSelectionMenuType], a
-	inc a ; ld a, ACROBATICS
+	if HIGH(ACROBATICS)
+		ld a, HIGH(ACROBATICS)
+	endc
+	ld [wFXAnimIDHi], a
+	if LOW(ACROBATICS) == (HIGH(ACROBATICS) + 1)
+		inc a
+	else
+		ld a, LOW(ACROBATICS)
+	endc
 	ld [wFXAnimIDLo], a
 	call MoveSelectionScreen
 	push af
@@ -498,7 +551,15 @@ ParsePlayerAction:
 	call FarCopyColorWRAM
 	call SetDefaultBGPAndOBP
 	ld a, [wCurPlayerMove]
-	inc a ; cp STRUGGLE
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(STRUGGLE) == 0
+	and a
+	jr nz, .cphl_struggle
+	ld a, l
+	assert LOW(STRUGGLE) != 0
+	cp LOW(STRUGGLE)
+.cphl_struggle
 	call nz, PlayClickSFX
 	ld a, $1
 	ldh [hBGMapMode], a
@@ -533,10 +594,17 @@ ParsePlayerAction:
 .locked_in
 	xor a
 	ld [wPlayerProtectCount], a
+	ld [wPlayerFuryCutterCount], a
 	ld hl, wPlayerSubStatus4
 	res SUBSTATUS_RAGE, [hl]
 
 .continue_protect
+	ld a, [wPlayerMoveStruct + MOVE_EFFECT]
+	cp EFFECT_FURY_CUTTER
+	jr z, .continue_fury_cutter
+	xor a
+	ld [wPlayerFuryCutterCount], a
+.continue_fury_cutter
 	call ParseEnemyAction
 	xor a
 	ret
@@ -544,6 +612,7 @@ ParsePlayerAction:
 .reset_rage
 	xor a
 	ld [wPlayerProtectCount], a
+	ld [wPlayerFuryCutterCount], a
 	ld hl, wPlayerSubStatus4
 	res SUBSTATUS_RAGE, [hl]
 .lavender_ghost
@@ -602,6 +671,12 @@ EnemyCanFlee:
 	ret
 
 .not_ability_trapped
+	ld a, [wEnemySubStatus5]
+	bit SUBSTATUS_INGRAIN, a
+	jr z, .no_ingrain
+	or 1
+	ret
+.no_ingrain
 	ld a, [wPlayerSubStatus2]
 	bit SUBSTATUS_CANT_RUN, a
 	ret nz
@@ -627,20 +702,43 @@ CompareMovePriority:
 	ret
 
 GetMovePriority:
-; Return the priority of move being used.
+; Return the priority of move being selected.
 	push bc
 	push de
-	ld a, BATTLE_VARS_MOVE
-	call GetBattleVar
+
+	; Note that we want to check priority of our SELECTED move, not used!
+	ldh a, [hBattleTurn]
+	and a
+	ld a, [wPlayerSelectedMove]
+	jr z, .got_selected_move
+	ld a, [wEnemySelectedMove]
+.got_selected_move
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
 
 	ld hl, MovePriorities
-	ld de, 2
-	call IsInArray
+.loop
+	ld a, [hli]
 	inc a
-	jr z, .got_priority
+	jr z, .done
+	dec a
+	cp c
+	jr nz, .skip
+	ld a, [hli]
+	cp b
+	jr z, .got
 	inc hl
+	jr .loop
+
+.skip
+	inc hl
+	inc hl
+	jr .loop
+
+.got
 	ld a, [hl]
-.got_priority
+.done
 	xor $80 ; treat it as a signed byte
 	ld b, a
 	call GetTrueUserAbility
@@ -660,8 +758,10 @@ GetMovePriority:
 INCLUDE "data/moves/priorities.asm"
 
 GetMoveEffect:
-	ld hl, Moves + MOVE_EFFECT
-	jmp GetMoveProperty
+	ld l, a
+	ld a, MOVE_EFFECT
+	call GetMoveAttribute
+	ret
 
 PerformMove:
 	xor a
@@ -681,7 +781,15 @@ PerformMove:
 	res SUBSTATUS_IN_ABILITY, [hl]
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	cp DESTINY_BOND
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(DESTINY_BOND) == 0
+	and a
+	jr nz, .cphl_destiny_bond
+	ld a, l
+	assert LOW(DESTINY_BOND) != 0
+	cp LOW(DESTINY_BOND)
+.cphl_destiny_bond
 	jr z, .skip_destinybond_reset
 	res SUBSTATUS_DESTINY_BOND, [hl]
 .skip_destinybond_reset
@@ -2183,8 +2291,13 @@ SuppressUserAbilities:
 	jr z, .neutralizing_gas
 	cp UNNERVE
 	ret nz
+	ldh a, [hBattleTurn]
+	push af
 	farcall HandleLeppaBerry
-	farjp HandleHealingItems
+	farcall HandleHealingItems
+	pop af
+	ldh [hBattleTurn], a
+	ret
 
 .neutralizing_gas
 	; Use -1 as sentinel, not 0. This is because Transform (via Imposter) should
@@ -3013,10 +3126,12 @@ NewEnemyMonStatus:
 	ld [hli], a
 	ld [hli], a
 	ld [hli], a
+	ld [hli], a
 	ld [hl], a
 	ld [wEnemyDisableCount], a
 	ld [wEnemyEncoreCount], a
 	ld [wEnemyProtectCount], a
+	ld [wEnemyFuryCutterCount], a
 	ld [wEnemyToxicCount], a
 	ld [wEnemyPerishCount], a
 	ld [wPlayerWrapCount], a
@@ -3188,6 +3303,7 @@ NewBattleMonStatus:
 	ld [hli], a
 	ld [hli], a
 	ld [hli], a
+	ld [hli], a
 	ld [hl], a
 	ld hl, wPlayerUsedMoves
 rept NUM_MOVES - 1
@@ -3197,6 +3313,7 @@ endr
 	ld [wPlayerDisableCount], a
 	ld [wPlayerEncoreCount], a
 	ld [wPlayerProtectCount], a
+	ld [wPlayerFuryCutterCount], a
 	ld [wPlayerToxicCount], a
 	ld [wPlayerPerishCount], a
 	ld [wEnemyWrapCount], a
@@ -3321,6 +3438,17 @@ SpikesDamage:
 	ld c, 1
 SpikesDamage_GotAbility:
 ; Input: b: ability, c: 0 if forced out, 1 otherwise
+	ld a, [wFieldEffects]
+	and FIELD_GRAVITY
+	jr nz, .gravity
+
+	push bc
+	predef GetUserItemAfterUnnerve
+	ld a, b
+	cp HELD_HEAVY_BOOTS
+	pop bc
+	ret z
+
 	push de
 	push bc
 	call SetParticipant
@@ -3330,13 +3458,7 @@ SpikesDamage_GotAbility:
 	pop de
 	jmp nz, HandleAirBalloon
 
-	push bc
-	predef GetUserItemAfterUnnerve
-	ld a, b
-	cp HELD_HEAVY_BOOTS
-	pop bc
-	ret z
-
+.gravity
 	ldh a, [hBattleTurn]
 	and a
 	ld hl, wPlayerHazards
@@ -3346,7 +3468,10 @@ SpikesDamage_GotAbility:
 	push hl
 	call .Spikes
 	pop hl
-	jr .ToxicSpikes
+	push hl
+	call .ToxicSpikes
+	pop hl
+	jr .StickyWeb
 
 .Spikes:
 	ld a, b
@@ -3371,6 +3496,14 @@ SpikesDamage_GotAbility:
 
 	ld hl, BattleText_UserHurtBySpikes
 	jmp StdBattleTextbox
+
+.StickyWeb:
+	ld a, [hl]
+	and HAZARDS_STICKY_WEB
+	ret z
+
+	ld b, SPEED
+	farjp ForceLowerStat
 
 .ToxicSpikes:
 	ld a, [hl]
@@ -3441,7 +3574,7 @@ SpikesDamage_GotAbility:
 
 HandleAirBalloon:
 ; prints air balloon msg and returns z if we have air balloon
-	farcall GetUserItem
+	farcall GetUserItemAfterUnnerve
 	ld a, b
 	cp HELD_AIR_BALLOON
 	ret nz
@@ -3669,7 +3802,8 @@ _HeldHPHealingItem:
 .quarter_maxhp
 	call GetQuarterMaxHP
 .got_hp_to_restore
-	farcall ShowPotentialAbilityActivation
+	ld a, CUD_CHEW
+	farcall ShowPotentialSpecificAbilityActivation
 	call CurItemRecoveryAnim
 	call RestoreHP
 	xor a
@@ -4594,6 +4728,14 @@ endc
 	or 1
 	ret
 .check_other_trapped
+	ld a, BATTLE_VARS_SUBSTATUS5
+	call GetBattleVar
+	bit SUBSTATUS_INGRAIN, a
+	jr z, .not_ingrained
+	ld hl, BattleText_PkmnCantBeRecalled
+	or 1
+	ret
+.not_ingrained
 	ldh a, [hBattleTurn]
 	and a
 	ld a, [wPlayerWrapCount]
@@ -4748,6 +4890,10 @@ CheckRunSpeed:
 	pop de
 	pop hl
 	jmp z, .can_escape
+
+	ld a, [wPlayerSubStatus5]
+	bit SUBSTATUS_INGRAIN, a
+	jr nz, .cant_escape
 
 	ld a, [wEnemySubStatus2]
 	bit SUBSTATUS_CANT_RUN, a
@@ -5209,7 +5355,8 @@ MoveSelectionScreen:
 
 .struggle
 	call ClearSprites
-	ld a, STRUGGLE
+	ld hl, STRUGGLE
+	call GetMoveIDFromIndex
 	ld [wCurPlayerMove], a
 	ld hl, BattleText_PkmnHasNoMovesLeft
 	call StdBattleTextbox
@@ -5460,7 +5607,7 @@ MoveInfoBox:
 	ld de, .PowAcc
 	rst PlaceString
 
-	ld hl, Moves + MOVE_POWER
+	ld a, MOVE_POWER
 	call GetCurMoveProperty
 	hlcoord 1, 10
 	cp 2
@@ -5475,7 +5622,7 @@ MoveInfoBox:
 	rst PlaceString
 
 .place_accuracy
-	ld hl, Moves + MOVE_ACC
+	ld a, MOVE_ACC
 	call GetCurMoveProperty
 	hlcoord 6, 10
 	cp -1
@@ -5567,13 +5714,8 @@ CheckUsableMoves:
 CheckUsableMove:
 ; Check if move a in the move list is usable. Returns z if usable
 ; Note that the first move in the list is move 0, not move 1.
-; If nz, a contains a number describing why it isn't usable:
-; 1 - no PP
-; 2 - disabled
-; 3 - choiced item
-; 4 - assault vest on status move
-; 5 - encored
-; 6 - choiced ability
+; If nz, a contains a number describing why it isn't usable
+; MOVE_UNUSABLE_* (see constants/battle_constants.asm)
 	push hl
 	push de
 	push bc
@@ -5585,6 +5727,9 @@ CheckUsableMove:
 	call nz, .CheckAssaultVest
 	call nz, .CheckEncored
 	call nz, .CheckChoiceAbility
+	call nz, .CheckTaunt
+	call nz, .CheckTorment
+	call nz, .CheckImprison
 
 	; All failure conditions return z, but this function returns nz upon
 	; failure.
@@ -5602,11 +5747,11 @@ CheckUsableMove:
 	add hl, bc
 	ld a, [hl]
 	and $3f
-	ld a, 1
+	ld a, MOVE_UNUSABLE_NO_PP
 	ret
 
 .CheckDisabled:
-	ld b, 2
+	ld b, MOVE_UNUSABLE_DISABLE
 	ldh a, [hBattleTurn]
 	and a
 	ld a, [wPlayerDisableCount]
@@ -5621,7 +5766,7 @@ CheckUsableMove:
 	ret
 
 .CheckChoiceItem:
-	ld b, 3
+	ld b, MOVE_UNUSABLE_CHOICE_ITEM
 	call .GetItemHeldEffect
 	cp HELD_CHOICE
 	ret nz
@@ -5641,14 +5786,14 @@ CheckUsableMove:
 	call GetMoveFixedCategory
 	pop bc
 	cp STATUS
-	ld a, 4
+	ld a, MOVE_UNUSABLE_ASSAULT_VEST
 	ret
 
 .CheckEncored:
 	call .GetEncoreCount
 	and $f
 	jr z, .RetNZ
-	ld b, 5
+	ld b, MOVE_UNUSABLE_ENCORE
 	; fallthrough
 .CheckEncoreVar:
 	call .GetEncoreCount
@@ -5663,7 +5808,7 @@ CheckUsableMove:
 	ret
 
 .CheckChoiceAbility:
-	ld b, 6
+	ld b, MOVE_UNUSABLE_CHOICE_ABILITY
 	call GetTrueUserAbility
 	cp GORILLA_TACTICS
 	ret nz
@@ -5686,6 +5831,72 @@ CheckUsableMove:
 
 .RetNZ:
 	or 1
+	ret
+
+.CheckTaunt:
+	ldh a, [hBattleTurn]
+	and a
+	ld hl, wPlayerTauntCount
+	jr z, .got_taunt_turn
+	ld hl, wEnemyTauntCount
+.got_taunt_turn
+	ld a, [hl]
+	and $F0
+	jr z, .RetNZ
+
+	ld hl, wBattleMonMoves
+	call GetUserMonAttr
+	ld b, 0
+	add hl, bc
+	ld a, [hl]
+	push bc
+	call GetMoveFixedCategory
+	pop bc
+	cp STATUS
+	ld a, MOVE_UNUSABLE_TAUNT
+	ret
+
+.CheckTorment:
+	ld a, BATTLE_VARS_SUBSTATUS5
+	call GetBattleVar
+	bit SUBSTATUS_TORMENTED, a
+	jr z, .RetNZ
+
+	ld hl, wBattleMonMoves
+	call GetUserMonAttr
+	ld b, 0
+	add hl, bc
+	ld a, [hl]
+	call GetMoveIndexFromID
+	push bc
+	ld b, h
+	ld c, l
+	ld a, BATTLE_VARS_LAST_MOVE
+	call GetBattleVar
+	call CompareMove
+	pop bc
+	ld a, MOVE_UNUSABLE_TORMENT
+	ret
+
+.CheckImprison:
+	ld a, BATTLE_VARS_SUBSTATUS5_OPP
+	call GetBattleVar
+	bit SUBSTATUS_IMPRISON, a
+	jr z, .RetNZ
+
+	ld hl, wBattleMonMoves
+	call GetUserMonAttr
+	ld b, 0
+	add hl, bc
+	ld a, [hl]
+	push af
+	call SwitchTurn
+	ld hl, wBattleMonMoves
+	call GetUserMonAttr
+	pop af
+	farcall UserKnowsMove
+	call SwitchTurn
+	ld a, MOVE_UNUSABLE_IMPRISON
 	ret
 
 ParseEnemyAction:
@@ -5746,7 +5957,7 @@ ParseEnemyAction:
 	cp BATTLEACTION_STRUGGLE
 	jr z, .struggle
 	cp BATTLEACTION_SWITCH1
-	jr nc, ResetVarsForSubstatusRage
+	jmp nc, ResetVarsForSubstatusRage
 	ld [wCurEnemyMoveNum], a
 	ld c, a
 	ld a, [wEnemySubStatus3]
@@ -5800,20 +6011,27 @@ ParseEnemyAction:
 .no_rage
 	ld a, [wEnemyMoveStruct + MOVE_EFFECT]
 	cp EFFECT_PROTECT
-	ret z
+	jr z, .rage_done
 	cp EFFECT_ENDURE
-	ret z
+	jr z, .rage_done
 	xor a
 	ld [wEnemyProtectCount], a
+.rage_done
+	ld a, [wEnemyMoveStruct + MOVE_EFFECT]
+	cp EFFECT_FURY_CUTTER
+	ret z
+	ld [wEnemyFuryCutterCount], a
 	ret
 
 .struggle
-	ld a, STRUGGLE
+	ld hl, STRUGGLE
+	call GetMoveIDFromIndex
 	jr .finish
 
 ResetVarsForSubstatusRage:
 	xor a
 	ld [wEnemyProtectCount], a
+	ld [wEnemyFuryCutterCount], a
 	ld hl, wEnemySubStatus4
 	res SUBSTATUS_RAGE, [hl]
 	ret
@@ -5881,18 +6099,29 @@ endc
 	and a
 	jr nz, .switch
 	ld a, [wCurPlayerMove]
-	inc a ; cp STRUGGLE
-	ld a, BATTLEACTION_STRUGGLE
+	call GetMoveIndexFromID
+	ld b, BATTLEACTION_STRUGGLE
+	ld a, h
+	assert HIGH(STRUGGLE) == 0
+	and a
+	jr nz, .cphl_struggle
+	ld a, l
+	assert LOW(STRUGGLE) != 0
+	cp LOW(STRUGGLE)
+.cphl_struggle
 	jr z, .use_move
 	ld a, [wCurMoveNum]
+	ld b, a
 .use_move
+	ld a, b
+.send
 	and $0f
 	ret
 
 .switch
 	ld a, [wPlayerSwitchTarget]
 	add BATTLEACTION_SWITCH1 - 1
-	jr .use_move
+	jr .send
 
 LoadEnemyWildmon:
 ; Initialize wildmon data
@@ -6394,7 +6623,7 @@ _BattleRandom::
 PlayBattleAnimDE_OnlyIfVisible:
 	ld a, BATTLE_VARS_SUBSTATUS3
 	call GetBattleVar
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	ret nz
 
 PlayBattleAnimDE:
@@ -7388,8 +7617,7 @@ _GetNewBaseExp:
 	cp b
 	jr nz, .is_evo
 	predef GetEvosAttacksPointer
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
+	farcall GetNextEvoAttackByte
 	inc a
 	ld a, 4 ; basic: *4/20 ->  *0.2
 	jr nz, .got_multiplier
@@ -7404,8 +7632,7 @@ _GetNewBaseExp:
 	predef GetEvosAttacksPointer
 	pop bc
 .evos_loop
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
+	farcall GetNextEvoAttackByte
 	ld d, a
 	inc a
 	ld a, 10 ; 2nd stage: *10/20 -> *0.5
@@ -7423,8 +7650,7 @@ _GetNewBaseExp:
 	inc hl
 	inc hl
 	push hl
-	ld a, BANK(EvosAttacks)
-	call GetFarWord
+	farcall GetNextEvoAttackByte
 	ld d, l
 	ld a, h
 	pop hl
@@ -7888,6 +8114,8 @@ StartBattle:
 	ld a, [wPartyCount]
 	and a
 	ret z
+
+	farcall InitBattleEnvironment
 
 	ld a, [wTimeOfDayPal]
 	push af

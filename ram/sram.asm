@@ -24,7 +24,11 @@ sGameDataEnd::
 
 sOptions3:: db
 
-	ds 392 ; unused
+sConversionTableChecksum:: dw
+
+sMoveIndexTable:: ds wMoveIndexTableEnd - wMoveIndexTable
+
+	ds 134 ; unused
 
 sSRAMAccessCount:: db
 
@@ -53,7 +57,11 @@ sBackupGameDataEnd::
 
 sBackupOptions3:: db
 
-	ds 393 ; unused
+sBackupConversionTableChecksum:: dw
+
+sBackupMoveIndexTable:: ds wMoveIndexTableEnd - wMoveIndexTable
+
+	ds 135 ; unused
 
 sBackupChecksum:: dw
 	assert sBackupChecksum == $bf0d, "Backup checksum has shifted."

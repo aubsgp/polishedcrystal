@@ -62,6 +62,10 @@ CheckBadge:
 	text_far _BadgeRequiredText
 	text_end
 
+CheckPartyMoveIndex:
+; Check if a monster in your party has move hl.
+	call GetMoveIDFromIndex
+	ld d, a
 CheckPartyMove:
 ; Check if a monster in your party has move d, or
 ; can have move d and you have TM/HM e.
@@ -139,8 +143,9 @@ CheckPartyMove:
 	ret
 
 CheckForSurfingPikachu:
-	lb de, SURF, HM_SURF
-	call CheckPartyMove
+	ld hl, SURF
+	ld e, HM_SURF
+	call CheckPartyMoveIndex
 	jr c, .no
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
@@ -394,8 +399,9 @@ TryFlashOW::
 	ld a, [wTimeOfDayPalset]
 	cp DARKNESS_PALSET
 	jr nz, .quit
-	lb de, FLASH, TM_FLASH
-	call CheckPartyMove
+	ld hl, FLASH
+	ld e, TM_FLASH
+	call CheckPartyMoveIndex
 	jr c, .quit
 	call GetPartyNickname
 	ld a, BANK(AskFlashScript)
@@ -639,8 +645,9 @@ TrySurfOW::
 	call CheckEngineFlag
 	jr c, .quit
 
-	lb de, SURF, HM_SURF
-	call CheckPartyMove
+	ld hl, SURF
+	ld e, HM_SURF
+	call CheckPartyMoveIndex
 	jr c, .quit
 
 	ld hl, wOWState
@@ -902,8 +909,9 @@ Script_AutoWaterfall:
 	step_end
 
 TryWaterfallOW::
-	lb de, WATERFALL, HM_WATERFALL
-	call CheckPartyMove
+	ld hl, WATERFALL
+	ld e, HM_WATERFALL
+	call CheckPartyMoveIndex
 	jr c, .failed
 	ld de, ENGINE_RISINGBADGE
 	call CheckEngineFlag
@@ -1201,8 +1209,9 @@ AskStrengthScript:
 	endtext
 
 TryStrengthOW:
-	lb de, STRENGTH, HM_STRENGTH
-	call CheckPartyMove
+	ld hl, STRENGTH
+	ld e, HM_STRENGTH
+	call CheckPartyMoveIndex
 	jr c, .nope
 
 	ld de, ENGINE_PLAINBADGE
@@ -1351,8 +1360,9 @@ Script_AutoWhirlpool:
 	step_end
 
 TryWhirlpoolOW::
-	lb de, WHIRLPOOL, HM_WHIRLPOOL
-	call CheckPartyMove
+	ld hl, WHIRLPOOL
+	ld e, HM_WHIRLPOOL
+	call CheckPartyMoveIndex
 	jr c, .failed
 	ld de, ENGINE_GLACIERBADGE
 	call CheckEngineFlag
@@ -1456,8 +1466,9 @@ AutoHeadbuttScript:
 	farjp PrintOverworldItemIcon
 
 TryHeadbuttOW::
-	lb de, HEADBUTT, -1 ; you need the tutor for Headbutt
-	call CheckPartyMove
+	ld hl, HEADBUTT
+	ld e, -1 ; you need the tutor for Headbutt
+	call CheckPartyMoveIndex
 	jr c, .no
 
 	ld a, BANK(AskHeadbuttScript)
@@ -1578,8 +1589,9 @@ AskRockSmashScript:
 	farjumptext _MaySmashText
 
 HasRockSmash:
-	lb de, ROCK_SMASH, TM_ROCK_SMASH
-	call CheckPartyMove
+	ld hl, ROCK_SMASH
+	ld e, TM_ROCK_SMASH
+	call CheckPartyMoveIndex
 	; a = carry ? 1 : 0
 	sbc a
 	and 1
@@ -1934,8 +1946,9 @@ Script_CantGetOffBike:
 	waitendtext
 
 HasCutAvailable::
-	lb de, CUT, HM_CUT
-	call CheckPartyMove
+	ld hl, CUT
+	ld e, HM_CUT
+	call CheckPartyMoveIndex
 	jr c, .no
 
 	ld de, ENGINE_HIVEBADGE

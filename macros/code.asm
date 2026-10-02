@@ -78,3 +78,4 @@ MACRO changebridgeblock
 	; hard-coding the above calculation for efficiency
 	ld [hl], \3
 ENDM
+

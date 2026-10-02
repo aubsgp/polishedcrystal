@@ -265,6 +265,7 @@ IntimidateAbility:
 	call z, StatUpAbility
 
 .continue
+	call SwitchTurn
 	call EndAbility
 	farcall CheckMirrorHerb
 	farjp CheckStatHerbsAfterIntimidate
@@ -416,7 +417,6 @@ ForewarnAbility:
 	and a
 	jr z, .done
 
-	; Check for special cases
 	ld b, a
 	push hl
 	farcall GetMoveEffect
@@ -427,8 +427,9 @@ ForewarnAbility:
 .not_special
 	ld a, b
 	push hl
-	ld hl, Moves + MOVE_POWER
-	call GetMoveProperty
+	ld l, a
+	ld a, MOVE_POWER
+	call GetMoveAttribute
 	pop hl
 	ld c, a
 	; Status moves have 0 power
@@ -493,8 +494,15 @@ ScreenCleanerAbility:
 	ld a, [wPlayerScreens]
 	and a
 	jr nz, .screens_up
-	ld a, [wEnemyScreens]
+	ld a, [wEnemyVeils]
 	and a
+	jr nz, .screens_up
+.check_veil
+	ld a, [wPlayerScreens]
+	and VEILS_AURORA_VEIL
+	jr nz, .screens_up
+	ld a, [wEnemyVeils]
+	and VEILS_AURORA_VEIL
 	ret z
 .screens_up
 	call BeginAbility
@@ -511,9 +519,12 @@ ScreenCleanerAbility:
 .do_it
 	farcall GetTurnAndPlacePrefix
 	ld hl, wPlayerScreens
+	ld de, wPlayerVeils
 	jr z, .got_screens
 	ld hl, wEnemyScreens
+	ld de, wEnemyVeils
 .got_screens
+	push de
 	ld a, [hl]
 	push af
 	ld [hl], 0
@@ -524,8 +535,19 @@ ScreenCleanerAbility:
 .no_reflect
 	pop af
 	and SCREENS_LIGHT_SCREEN
-	ret z
+	jr z, .no_light_screen
 	ld hl, BattleText_LightScreenFell
+	call StdBattleTextbox
+.no_light_screen
+	pop de
+	ld a, [de]
+	ld h, a
+	xor a
+	ld [de], a
+	ld a, h
+	and VEILS_AURORA_VEIL
+	ret z
+	ld hl, BattleText_AuroraVeilFaded
 	jmp StdBattleTextbox
 
 RunEnemySynchronizeAbility:
@@ -919,7 +941,13 @@ CheckNullificationAbilities:
 .movelist_nullification
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	call IsInByteArray
+	push hl
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
+	pop hl
+	ld de, 2
+	call IsInWordArray
 	jr c, .ability_ok
 	ret
 
@@ -966,7 +994,7 @@ RunEnemyNullificationAbilities:
 
 NullificationAbilities:
 	dbw DRY_SKIN, DrySkinAbility
-	dbw FLASH_FIRE, FlashFireAbility
+	dbw FLASH_FIRE, FlashFireNullificationAbility
 	dbw LIGHTNING_ROD, LightningRodAbility
 	dbw MOTOR_DRIVE, MotorDriveAbility
 	dbw SAP_SIPPER, SapSipperAbility
@@ -1096,7 +1124,7 @@ WeakArmorAbility:
 	call EndAbility
 	farjp CheckMirrorHerb
 
-FlashFireAbility:
+FlashFireNullificationAbility:
 	call BeginAbility
 	call ShowAbilityActivation
 	ld a, BATTLE_VARS_SUBSTATUS1
@@ -1380,19 +1408,7 @@ HarvestAbility:
 	call GetUsedItemAddr
 	pop de
 	ld a, [hl]
-	and a
-	ret z
-	ld [wCurItem], a
-	ld b, a
-	push bc
-	push de
-	push hl
-	farcall CheckItemPocket
-	pop hl
-	pop de
-	pop bc
-	ld a, [wItemAttributeParamBuffer]
-	cp BERRIES
+	call IsItemBerry
 	ret nz
 
 	; Kill the used item
@@ -1408,6 +1424,31 @@ HarvestAbility:
 
 	; For the player, update backup items. Even in trainer battles.
 	jmp SetBackupItem
+
+IsItemBerry:
+; a: item
+; returns z if item is a berry
+	push hl
+	call GetUsedItemAddr
+	pop de
+	ld a, [hl]
+	and a
+	jr z, .no
+	ld [wCurItem], a
+	ld b, a
+	push bc
+	push de
+	push hl
+	farcall CheckItemPocket
+	pop hl
+	pop de
+	pop bc
+	ld a, [wItemAttributeParamBuffer]
+	cp BERRIES
+	ret
+.no
+	or 1
+	ret
 
 PickupAbility:
 ; At end of turn, pickup consumed opponent items if we don't have any
@@ -1628,6 +1669,7 @@ OffensiveDamageAbilities:
 	dbw SHEER_FORCE, SheerForceAbility
 	dbw ANALYTIC, AnalyticAbility
 	dbw SOLAR_POWER, SolarPowerAbility
+	dbw FLASH_FIRE, FlashFireDamageAbility
 	dbw IRON_FIST, IronFistAbility
 	dbw TOUGH_CLAWS, ToughClawsAbility
 	dbw MEGA_LAUNCHER, MegaLauncherAbility
@@ -1744,6 +1786,20 @@ SolarPowerAbility:
 	ln a, 3, 2 ; x1.5
 	jmp ApplySpecialAttackDamageMod
 
+FlashFireDamageAbility:
+; 150% damage for fire-type moves when previously hit by a fire move
+	ld a, BATTLE_VARS_SUBSTATUS1
+	call GetBattleVar
+	bit SUBSTATUS_FLASH_FIRE, a
+	ret z
+
+	ld a, BATTLE_VARS_MOVE_TYPE
+	call GetBattleVar
+	cp FIRE
+	ret nz
+	ln a, 3, 2 ; x1.5
+	jmp MultiplyAndDivide
+
 ToughClawsAbility:
 	call CheckContactMove
 	ret c
@@ -1768,8 +1824,14 @@ IsPunchingMove:
 ; Returns z if the used move is a punching move, otherwise nz|nc.
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
+	push bc
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
 	ld hl, PunchingMoves
-	call IsInByteArray
+	ld de, 2
+	call IsInWordArray
+	pop bc
 	sbc a
 	inc a
 	ret
@@ -1788,7 +1850,13 @@ MoveBoostAbility:
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
 	push bc
-	call IsInByteArray
+	push hl
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
+	pop hl
+	ld de, 2
+	call IsInWordArray
 	pop bc
 	ret nc
 	ld a, b
@@ -2037,9 +2105,17 @@ ShowAbilityActivation::
 	call PerformAbilityGFX
 	jmp PopBCDEHL
 
+ShowPotentialSpecificAbilityActivation:
+; ShowPotentialAbilityActivation if user's ability matches ability in a.
+	push bc
+	ld b, a
+	call GetTrueUserAbility
+	cp b
+	pop bc
+	ret nz
 ShowPotentialAbilityActivation:
 ; This avoids duplicating checks to avoid text spam. This will run
-; ShowAbilityActivation if animations are disabled (something only abilities do)
+; ShowAbilityActivation if we're within an ability execution (see BeginAbility).
 	ld a, [wInAbility]
 	and a
 	ret z
@@ -2153,33 +2229,9 @@ RunPostBattleAbilities::
 	call GetPartyParamLocationAndValue
 
 	; Are we holding an item currently?
-	ld a, [hl]
-	and a
-	jr z, .not_holding_item
-
-	; If we are already holding an item, check if we have room in the bag.
-	; If we don't, abort the ability activation.
-	push hl
-	push de
-	push bc
-	ld a, c
-	ld [wCurItem], a
-	ld a, 1
-	ld [wItemQuantityChangeBuffer], a
-	ld hl, wNumItems
-	call ReceiveItem
-	pop bc
-	pop de
-	pop hl
+	farcall ReceiveBattleItem
 	ret nc
 	ld a, c
-	jr .gave_item
-
-.not_holding_item
-	ld a, c
-	ld [hl], a
-
-.gave_item
 	push de
 	push bc
 	ld [wNamedObjectIndex], a

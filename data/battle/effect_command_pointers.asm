@@ -1,12 +1,14 @@
 MACRO command
 	const \1_command
 	DEF \1 EQUS "db \1_command"
+	db BANK(BattleCommand_\1)
 	dw BattleCommand_\1
 ENDM
 
 MACRO commandx
 	const \1_command
 	DEF \1 EQUS "db \1_command,"
+	db BANK(BattleCommand_\1)
 	dw BattleCommand_\1
 ENDM
 
@@ -97,6 +99,7 @@ BattleCommandPointers:
 	command conditionalboost
 	command attract
 	command happinesspower
+	command unhappinesspower
 	command damagecalc
 	command safeguard
 	command checksafeguard
@@ -115,6 +118,7 @@ BattleCommandPointers:
 	command rage
 	command doubleflyingdamage
 	command doubleundergrounddamage
+	command doubledivingdamage
 	command checkfuturesight
 	command futuresight
 	command doubleminimizedamage
@@ -144,11 +148,57 @@ BattleCommandPointers:
 	command lowkick
 	command brickbreak
 	command trickroom
+	command weatherball
+	command burnflinchtarget
+	command freezeflinchtarget
+	command paralyzeflinchtarget
+	command toxictarget
+	command metalburst
+	command firstturn
+	command mist
+	command luckychant
+	command changeability
+	command recycle
+	command ohko
+	command magiccoat
+	command eruption
+	command lockon
+	command soak
+	command checkburnup
+	command burnup
+	command checkgravity
+	command gravity
+	command mirrormove
+	command clearstats
+	command storedpower
+	command psychoshift
+	command trumpcard
+	command auroraveil
+	command stickyweb
+	command taunt
+	command torment
+	command yawn
+	command magnetrise
+	command throatchop
+	command embargo
+	command checkasleep
+	command psywave
+	command heavyslam
+	command electroball
+	command furycutter
+	command camouflage
+	command naturepower
+	command dragontail
+	command memento
+	command nightmare
+	command ingrain
+	command imprison
 
 	; The following commands have an argument
 	; Argument: check if possible (false) vs perform the action (true)
 	commandx bugbite
 	commandx knockoff
+	commandx incinerate
 
 	; Argument: stat to lower
 	; (raise|lower)stat: can miss, silent

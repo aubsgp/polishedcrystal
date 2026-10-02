@@ -109,6 +109,19 @@ PokeGear:
 	ld a, %11100100
 	jmp DmgToCgbObjPal0
 
+ClearVBank1::
+	ld a, 1
+	ldh [rVBK], a
+
+	ld hl, vTiles0
+	ld bc, STARTOF(VRAM) + SIZEOF(VRAM) - vTiles0
+	xor a
+	rst ByteFill
+
+	xor a
+	ldh [rVBK], a
+	ret
+
 Pokegear_LoadGFX:
 	call ClearVBank1
 	ld hl, TownMapGFX
@@ -1351,8 +1364,9 @@ _TownMap:
 	jmp TownMapJohtoFlips
 
 TownMap_InitFlyPossible:
-	lb de, FLY, HM_FLY
-	farcall CheckPartyMove
+	ld hl, FLY
+	ld e, HM_FLY
+	farcall CheckPartyMoveIndex
 	jr c, .no_fly
 	ld de, ENGINE_STORMBADGE
 	farcall CheckBadge

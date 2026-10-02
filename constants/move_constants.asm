@@ -264,46 +264,223 @@ endc
 	const PLAY_ROUGH    ; $fd
 	const DISARM_VOICE  ; $fe
 	const STRUGGLE      ; $ff
+
+	const WEATHER_BALL  ; $100
+	const MOONLIGHT     ; $101
+	const MORNING_SUN   ; $102
+	const MILK_DRINK    ; $103
+	const FURY_SWIPES   ; $104
+	const MYSTICAL_FIRE ; $105
+	const FIRE_FANG     ; $106
+	const ICE_FANG      ; $107
+	const THUNDER_FANG  ; $108
+	const POISON_FANG   ; $109
+	const PSYCHIC_FANGS ; $10A
+
+	const INFERNO       ; $10B
+	const OVERHEAT      ; $10C
+	const BLAZE_KICK    ; $10D
+	const BUBBLE        ; $10E
+	const MUDDY_WATER   ; $10F
+	const CLAMP         ; $110
+	const FLIP_TURN     ; $111
+	const RAZOR_SHELL   ; $112
+	const DIVE          ; $113
+	const WITHDRAW      ; $114
+	const LEAF_STORM    ; $115
+	const COTTON_SPORE  ; $116
+	const SHOCK_WAVE    ; $117
+	const PSYSHOCK      ; $118
+	const PSYCHO_CUT    ; $119
+	const MEDITATE      ; $11A
+	const ICE_BALL      ; $11B
+	const DUAL_CHOP     ; $11C
+	const BREAK_SWIPE   ; $11D
+	const DRACO_METEOR  ; $11E
+	const IRON_DEFENSE  ; $11F
+	const METAL_SOUND   ; $120
+	const MIRROR_SHOT   ; $121
+	const MAGNET_BOMB   ; $122
+	const METAL_BURST   ; $123
+	const INFESTATION   ; $124
+	const STRUGGLE_BUG  ; $125
+	const QUIVER_DANCE  ; $126
+	const ROCK_TOMB     ; $127
+	const ROCK_POLISH   ; $128
+	const DRILL_RUN     ; $129
+	const MUD_SHOT      ; $12A
+	const SAND_ATTACK   ; $12B
+	const CROSS_POISON  ; $12C
+	const POISON_GAS    ; $12D
+	const ACID_ARMOR    ; $12E
+	const BOUNCE        ; $12F
+	const AIR_CUTTER    ; $130
+	const POWERUPPUNCH  ; $131
+	const ROLLING_KICK  ; $132
+	const VITAL_THROW   ; $133
+	const JUMP_KICK     ; $134
+	const SUPERPOWER    ; $135
+	const DETECT        ; $136
+
+	const CONSTRICT     ; $137
+	const BIND          ; $138
+	const BARRAGE       ; $139
+	const COMET_PUNCH   ; $13A
+	const SPIKE_CANNON  ; $13B
+	const POUND         ; $13C
+	const FAKE_OUT      ; $13D
+	const EGG_BOMB      ; $13E
+	const FRUSTRATION   ; $13F
+	const SELFDESTRUCT  ; $140
+	const FLAIL         ; $141
+	const HARDEN        ; $142
+	const LOVELY_KISS   ; $143
+	const TAIL_WHIP     ; $144
+	const WHIRLWIND     ; $145
+	const SWEET_SCENT   ; $146
+	const BLOCK         ; $147
+	const REVENGE       ; $148
+	const VACUUM_WAVE   ; $149
+	const CLEAR_SMOG    ; $14A
+	const SLUDGE        ; $14B
+	const SAND_TOMB     ; $14C
+	const MUD_BOMB      ; $14D
+	const HEAD_SMASH    ; $14E
+	const TWINEEDLE     ; $150
+	const FIRSTIMPRESS  ; $151
+	const SILVER_WIND   ; $152
+	const SIGNAL_BEAM   ; $153
+	const SPIDER_WEB    ; $154
+	const SHADOW_SNEAK  ; $155
+	const SHADOW_PUNCH  ; $156
+	const OMINOUS_WIND  ; $157
+	const FLAME_WHEEL   ; $158
+	const MAGICAL_LEAF  ; $159
+	const BULLET_SEED   ; $15A
+	const HORN_LEECH    ; $15B
+	const LEAF_BLADE    ; $15C
+	const WOOD_HAMMER   ; $15D
+	const SOLAR_BLADE   ; $15E
+	const ELECTROWEB    ; $15F
+	const POWDER_SNOW   ; $160
+	const TWISTER       ; $161
+	const SNARL         ; $162
+	const FAIRY_WIND    ; $163
+
+	const MIST          ; $164
+	const LUCKY_CHANT   ; $165
+	const BRINE         ; $166
+	const GASTRO_ACID   ; $167
+	const SIMPLE_BEAM   ; $168
+	const WORRY_SEED    ; $169
+	const RECYCLE       ; $16A
+	const FISSURE       ; $16B
+	const GUILLOTINE    ; $16C
+	const HORN_DRILL    ; $16D
+	const SHEER_COLD    ; $16E
+	const MAGIC_COAT    ; $16F
+	const ERUPTION      ; $170
+	const WATER_SPOUT   ; $171
+	const NUZZLE        ; $172
+	const SKULL_BASH    ; $173
+	const SKY_ATTACK    ; $174
+	const RAZOR_WIND    ; $175
+	const ENDEAVOR      ; $176
+	const LOCK_ON       ; $177
+	const MIND_READER   ; $178
+	const SOAK          ; $179
+	const BURN_UP       ; $17A
+	const GRAVITY       ; $17B
+	const GRASS_KNOT    ; $17C
+	const MIRROR_MOVE   ; $17D
+	const INCINERATE    ; $17E
+	const PLUCK         ; $17F
+	const STORED_POWER  ; $180
+	const COSMIC_POWER  ; $181
+	const PSYCHO_SHIFT  ; $182
+	const TRUMP_CARD    ; $183
+	const PAYBACK       ; $184
+	const AURORA_VEIL   ; $185
+	const STICKY_WEB    ; $186
+	const TAUNT         ; $187
+	const TORMENT       ; $188
+	const YAWN          ; $189
+	const MAGNET_RISE   ; $18A
+	const THROAT_CHOP   ; $18B
+	const EMBARGO       ; $18C
+	const SNORE         ; $18D
+	const SWITCHEROO    ; $18E
+	const PSYWAVE       ; $18F
+	const HEAVY_SLAM    ; $190
+	const ELECTRO_BALL  ; $191
+	const FURY_CUTTER   ; $192
+	const COPYCAT       ; $193
+	const CAMOUFLAGE    ; $194
+	const NATURE_POWER  ; $195
+	const DRAGON_TAIL   ; $196
+	const MEMENTO       ; $197
+	const FOCUS_PUNCH   ; $198
+	const SCALE_SHOT    ; $199
+	const NIGHTMARE     ; $19A
+	const INGRAIN       ; $19B
+	const IMPRISON      ; $19C
+	const BONE_RUSH     ; $19D
+	const SUBMISSION    ; $19E
+	const SHARPEN       ; $19F
+	const BONE_CLUB     ; $1A0
+	const SMOG          ; $1A1
+	const MEGA_PUNCH    ; $1A2
+	const SLAM          ; $1A3
+	const KINESIS       ; $1A4
+	const VISE_GRIP     ; $1A5
+	const MEGA_KICK     ; $1A6
+	const AROMATHERAPY  ; $1A7
+	const BABYDOLLEYES  ; $1A8
+	const COTTON_GUARD  ; $1A9
+	const COVET         ; $1AA
+	const HEAT_WAVE     ; $1AB
+	const HOWL          ; $1AC
 DEF NUM_ATTACKS EQU const_value - 1
-; Battle animations use the same constants as the moves up to this point
-	; These animations don't play if battle anims are disabled.
-	const_next $100
-	; Pseudo-moves (replaces default move anim for certain species)
-	const ANIM_FURY_ATTACK        ; $100
-	const ANIM_MILK_DRINK         ; $101
-	const ANIM_WITHDRAW           ; $102
-	const ANIM_HARDEN             ; $103
 
-	const ANIM_SLP                ; $104
-	const ANIM_BRN                ; $105
-	const ANIM_PSN                ; $106
-	const ANIM_SAP                ; $107
-	const ANIM_FRZ                ; $108
-	const ANIM_PAR                ; $109
-	const ANIM_IN_LOVE            ; $10a
-	const ANIM_IN_SANDSTORM       ; $10b
-	const ANIM_IN_HAIL            ; $10c
-	const ANIM_UNDER_CURSE        ; $10d
-	const ANIM_CONFUSED           ; $10e
-	const ANIM_STAT_UP            ; $10f
-	const ANIM_STAT_DOWN          ; $110
-	const ANIM_SHARPEN            ; $111
+; assert NUM_ATTACKS is less than 10-bits wide
+assert NUM_ATTACKS < 1024, "NUM_ATTACKS is too large"
 
+; Animations with negative IDs will play even when animations are disabled
+	const_def -1, -1
 	; These animations play no matter the battle animation settings
-	const ANIM_THROW_POKE_BALL    ; $112
-	const ANIM_SEND_OUT_MON       ; $113
-	const ANIM_RETURN_MON         ; $114
-	const ANIM_GHOST_TRANSFORM    ; $115
-
 	; Generic "hit" animations
-	const ANIM_MISS               ; $116
-	const ANIM_ENEMY_DAMAGE       ; $117
-	const ANIM_PLAYER_DAMAGE      ; $118
-	const ANIM_HIT_CONFUSION      ; $119
-	const ANIM_HELD_ITEM_TRIGGER  ; $11a
+	const ANIM_HELD_ITEM_TRIGGER     ;  -1 (ffff)
+	const ANIM_HIT_CONFUSION         ;  -2 (fffe)
+	const ANIM_PLAYER_DAMAGE         ;  -3 (fffd)
+	const ANIM_ENEMY_DAMAGE          ;  -4 (fffc)
+	const ANIM_MISS                  ;  -5 (fffb)
+	; These animations play no matter the battle animation settings
+	const ANIM_GHOST_TRANSFORM       ;  -6 (fffa)
+	const ANIM_RETURN_MON            ;  -7 (fff9)
+	const ANIM_SEND_OUT_MON          ;  -8 (fff8)
+	const ANIM_THROW_POKE_BALL       ;  -9 (fff7)
 
+	; Pseudo-moves (replaces default move anim for certain species)
+	const ANIM_SHARPEN               ; -10 (fff6)
+	const ANIM_STAT_DOWN             ; -11 (fff5)
+	const ANIM_STAT_UP               ; -12 (fff4)
+	const ANIM_CONFUSED              ; -13 (fff3)
+	const ANIM_UNDER_CURSE           ; -14 (fff2)
+	const ANIM_IN_HAIL               ; -15 (fff1)
+	const ANIM_IN_SANDSTORM          ; -16 (fff0)
+	const ANIM_IN_LOVE               ; -17 (ffef)
+	const ANIM_PAR                   ; -18 (ffee)
+	const ANIM_FRZ                   ; -19 (ffed)
+	const ANIM_SAP                   ; -20 (ffec)
+	const ANIM_PSN                   ; -21 (ffeb)
+	const ANIM_BRN                   ; -22 (ffea)
+	const ANIM_SLP                   ; -23 (ffe9)
+	const ANIM_HARDEN                ; -24 (ffe8)
+	const ANIM_WITHDRAW              ; -25 (ffe7)
+	const ANIM_MILK_DRINK            ; -26 (ffe6)
+	const ANIM_FURY_ATTACK           ; -27 (ffe5)
 DEF ANIM_AFFECTION EQU ANIM_IN_LOVE ; just an alias for now
-DEF NUM_BATTLE_ANIMS EQU const_value - 1
+DEF NUM_BATTLE_ANIMS EQU -const_value - 1
 DEF FIRST_UNCONDITIONAL_ANIM EQU ANIM_THROW_POKE_BALL
 
 ; wNumHits uses offsets from ANIM_MISS

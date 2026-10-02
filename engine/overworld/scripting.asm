@@ -275,6 +275,7 @@ RunScriptCommand:
 	dw Script_givebadge                  ; d8
 	dw Script_setquantity                ; d9
 	dw Script_pluralize                  ; da
+	dw Script_givepokemove               ; db
 	assert_table_length NUM_EVENT_COMMANDS
 
 GetScriptWordDE::
@@ -2761,5 +2762,32 @@ Pluralize:
 	ld [bc], a
 	pop af
 	pop hl
+	ld [hl], a
+	ret
+
+Script_givepokemove:
+	; Get Move
+	call GetScriptByte
+	ld l, a
+	call GetScriptByte
+	ld h, a
+	call GetMoveIDFromIndex
+	ld d, a
+
+	; Get Pokemon
+	call GetScriptByte
+	ld l, a
+	call GetScriptByte
+	ld h, a
+	lb bc, 0, wPartyMon1Moves - wPartyMon1
+	add hl, bc
+
+	; Get Move number
+	call GetScriptByte
+	ld c, a
+	add hl, bc
+
+	; Set move
+	ld a, d
 	ld [hl], a
 	ret

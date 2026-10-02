@@ -1,7 +1,7 @@
 ; Battle animation command interpreter.
 
 PlayBattleAnim:
-	farcall CheckBattleAnimSubstitution
+	call CheckBattleAnimSubstitution
 	ldh a, [rWBK]
 	push af
 
@@ -13,6 +13,72 @@ PlayBattleAnim:
 	pop af
 	ldh [rWBK], a
 	ret
+
+CheckBattleAnimSubstitution:
+; Checks the animation ID and possibly change it based on species.
+	ld a, [wFXAnimIDHi]
+	ld b, a
+	ld a, [wFXAnimIDLo]
+	ld c, a
+	ld a, b
+	assert HIGH(FRESH_SNACK) == 0
+	and a
+	jr nz, .cpbc_fresh_snack
+	ld a, c
+	assert LOW(FRESH_SNACK) != 0
+	cp LOW(FRESH_SNACK)
+.cpbc_fresh_snack
+	ld de, ANIM_MILK_DRINK
+	ld hl, .MilkDrinkUsers
+	jr z, .check_species_list
+	ld a, b
+	assert HIGH(FURY_STRIKES) == 0
+	and a
+	jr nz, .cpbc_fury_strikes
+	ld a, c
+	assert LOW(FURY_STRIKES) != 0
+	cp LOW(FURY_STRIKES)
+.cpbc_fury_strikes
+	ld de, ANIM_FURY_ATTACK
+	ld hl, FuryAttackUsers
+	jr z, .check_species_list
+	ld a, b
+	assert HIGH(DEFENSE_CURL) == 0
+	and a
+	jr nz, .cpbc_defense_curl
+	ld a, c
+	assert LOW(DEFENSE_CURL) != 0
+	cp LOW(DEFENSE_CURL)
+.cpbc_defense_curl
+	ret nz
+
+	; Defense Curl has 3 variations
+	ld de, ANIM_WITHDRAW
+	ld hl, WithdrawUsers
+	call .check_species_list
+	ld de, ANIM_HARDEN
+	ld hl, HardenUsers
+	; fallthrough
+.check_species_list
+	push hl
+	ld hl, wBattleMonSpecies
+	call GetUserMonAttr
+	ld a, [hl]
+	ld bc, wBattleMonForm - wBattleMonSpecies
+	add hl, bc
+	ld c, a
+	ld b, [hl]
+	pop hl
+	call GetSpeciesAndFormIndexFromHL
+	ret nc
+	ld a, e
+	ld [wFXAnimIDLo], a
+	ld a, d
+	ld [wFXAnimIDHi], a
+	ret
+.MilkDrinkUsers:
+	dp MILTANK
+	db 0
 
 _PlayBattleAnim:
 	ld c, 6
@@ -107,11 +173,15 @@ RunBattleAnimScript:
 
 ; Speed up Rollout's animation.
 	ld a, [wFXAnimIDHi]
-	or a
+	if HIGH(ROLLOUT)
+		cp HIGH(ROLLOUT)
+	else
+		or a
+	endc
 	jr nz, .not_rollout
 
 	ld a, [wFXAnimIDLo]
-	cp ROLLOUT
+	cp LOW(ROLLOUT)
 	jr nz, .not_rollout
 
 	ld a, $2e
@@ -1254,6 +1324,7 @@ ClearBattleAnims:
 	ld hl, BattleAnimations
 	add hl, de
 	add hl, de
+	add hl, de
 	call GetBattleAnimPointer
 	call BattleAnimAssignPals
 	jmp DelayFrame
@@ -1331,7 +1402,7 @@ BattleAnim_UpdateOAM_All:
 	push hl
 	push de
 	farcall DoBattleAnimFrame
-	call BattleAnimOAMUpdate
+	farcall BattleAnimOAMUpdate
 	pop de
 	pop hl
 	ret c

@@ -340,7 +340,7 @@ PokeBallEffect:
 	; Everything below this are regular wild battles
 
 	ld a, [wEnemySubStatus3] ; BATTLE_VARS_SUBSTATUS3_OPP
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	jmp nz, Ball_MonIsHiddenMessage
 
 	ld a, [wPartyCount]
@@ -2698,7 +2698,17 @@ RestorePPEffect:
 
 .ppup2
 	ld a, [hl]
-	cp SKETCH
+	push hl
+	call GetMoveIndexFromID
+	ld a, h
+	assert HIGH(SKETCH) == 0
+	and a
+	jr nz, .cphl_sketch
+	ld a, l
+	assert LOW(SKETCH) != 0
+	cp LOW(SKETCH)
+.cphl_sketch
+	pop hl
 	jr z, .CantUsePPUpOnSketch
 
 	ld bc, MON_PP - MON_MOVES
@@ -3301,8 +3311,9 @@ GetMaxPPOfMove:
 .gotdatmove
 	ld a, [hl]
 	push hl
-	ld hl, Moves + MOVE_PP
-	call GetMoveProperty
+	ld l, a
+	ld a, MOVE_PP
+	call GetMoveAttribute
 	ld b, a
 	ld de, wStringBuffer1
 	ld [de], a

@@ -34,13 +34,19 @@ BattleCommand_selfdestruct:
 
 .not_unnerve
 	ld a, BATTLEANIM_PLAYER_DAMAGE
+SelfFaintUser:
+	and a
+	push af
 	ld [wNumHits], a
 	ld c, 3
 	call DelayFrames
 	ld a, $1
 	ld [wBattleAnimParam], a
 	call BattleCommand_lowersub
+	pop af
+	jr z, .skip_anim
 	call LoadMoveAnim
+.skip_anim
 	ld a, BATTLE_VARS_SUBSTATUS4
 	call GetBattleVarAddr
 	res SUBSTATUS_LEECH_SEED, [hl]

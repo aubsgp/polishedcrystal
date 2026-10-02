@@ -37,7 +37,6 @@ BattleCommand_transform:
 	push de
 	xor a
 	ld [wNumHits], a
-	ld [wFXAnimIDHi], a
 	ld a, $1
 	ld [wBattleAnimParam], a
 	ld a, BATTLE_VARS_SUBSTATUS4
@@ -47,7 +46,8 @@ BattleCommand_transform:
 	jr z, .mimic_substitute
 	call CheckUserIsCharging
 	jr nz, .mimic_substitute
-	ld a, SUBSTITUTE
+	ld hl, SUBSTITUTE
+	call GetMoveIDFromIndex
 	call LoadAnim
 .mimic_substitute
 	ld a, BATTLE_VARS_SUBSTATUS2
@@ -113,7 +113,10 @@ BattleCommand_transform:
 	inc de
 	and a
 	jr z, .done_move
-	cp SKETCH
+	push bc
+	ld bc, SKETCH
+	call CompareMove
+	pop bc
 	ld a, 1
 	jr z, .done_move
 	ld a, 5
@@ -153,12 +156,14 @@ BattleCommand_transform:
 .after_anim
 	xor a
 	ld [wNumHits], a
-	ld [wFXAnimIDHi], a
 	ld a, $2
 	ld [wBattleAnimParam], a
 	pop af
-	ld a, SUBSTITUTE
-	call nz, LoadAnim
+	jr z, .no_substitute
+	ld hl, SUBSTITUTE
+	call GetMoveIDFromIndex
+	call LoadAnim
+.no_substitute
 	ld hl, TransformedText
 	call StdBattleTextbox
 	pop de

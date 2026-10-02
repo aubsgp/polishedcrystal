@@ -10,10 +10,14 @@ MoveEffectsPointers:
 	dw RecoilHit
 	dw FlinchHit
 	dw PoisonHit
+	dw ToxicHit
 	dw BurnHit
 	dw ParalyzeHit
 	dw SleepHit
 	dw FreezeHit
+	dw BurnFlinchHit
+	dw FreezeFlinchHit
+	dw ParalyzeFlinchHit
 	dw ConfuseHit
 	dw AttackUpHit
 	dw DefenseUpHit
@@ -50,6 +54,7 @@ MoveEffectsPointers:
 	dw SpecialDefenseUp2
 	dw AccuracyUp2
 	dw EvasionUp2
+	dw DefenseUp3
 	dw BulkUp
 	dw CalmMind
 	dw Growth
@@ -135,6 +140,7 @@ MoveEffectsPointers:
 	dw SolarBeam
 	dw Thunder
 	dw Teleport
+	dw Dig
 	dw Fly
 	dw FlareBlitz
 	dw NormalHit
@@ -153,4 +159,58 @@ MoveEffectsPointers:
 	dw LowKick
 	dw BrickBreak
 	dw TrickRoom
+	dw WeatherBall
+	dw Overheat
+	dw QuiverDance
+	dw Superpower
+	dw MetalBurst
+	dw Bounce
+	dw Surf
+	dw Whirlpool
+	dw Twineedle
+	dw ClearStatsHit
+	dw Frustration
+	dw FakeOut
+	dw FirstImpression
+	dw Mist
+	dw LuckyChant
+	dw ChangeAbility
+	dw Recycle
+	dw OHKO
+	dw MagicCoat
+	dw Eruption
+	dw ChargeHit
+	dw StaticDamage
+	dw LockOn
+	dw Soak
+	dw BurnUp
+	dw Gravity
+	dw MirrorMove
+	dw Incinerate
+	dw StoredPower
+	dw CosmicPower
+	dw PsychoShift
+	dw TrumpCard
+	dw AuroraVeil
+	dw StickyWeb
+	dw Taunt
+	dw Torment
+	dw Yawn
+	dw MagnetRise
+	dw ThroatChop
+	dw Embargo
+	dw AsleepHit
+	dw Psywave
+	dw HeavySlam
+	dw ElectroBall
+	dw FuryCutter
+	dw Camouflage
+	dw NaturePower
+	dw DragonTail
+	dw Memento
+	dw FocusPunch
+	dw ScaleShot
+	dw Nightmare
+	dw Ingrain
+	dw Imprison
 	assert_table_length NUM_MOVE_EFECTS

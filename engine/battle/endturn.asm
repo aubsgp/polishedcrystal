@@ -17,7 +17,7 @@ HandleBetweenTurnEffects:
 	call CheckFaint
 	ret c
 	; aqua ring
-	; ingrain
+	call HandleIngrain
 	call HandleLeechSeed
 	call CheckFaint
 	ret c
@@ -27,49 +27,59 @@ HandleBetweenTurnEffects:
 	call HandleBurn
 	call CheckFaint
 	ret c
-	; nightmare
+	call HandleNightmare
+	call CheckFaint
+	ret c
 	call HandleCurse
 	call CheckFaint
 	ret c
 	call HandleWrap
 	call CheckFaint
 	ret c
-	; taunt
+	call HandleTaunt
 	call HandleEncore
 	call HandleDisable
-	; magnet rise
+	call HandleMagnetRise
 	; telekinesis
 	; heal block
-	; embargo
-	; yawn
+	call HandleEmbargo
+	call HandleYawn
 	call HandlePerishSong
 	call CheckFaint
 	ret c
 	call HandleRoost
+	; emergency exit
 	call HandleReflect
 	call HandleLightScreen
 	call HandleSafeguard
 	call HandleMist
 	; tailwind
-	; lucky chant
+	call HandleLuckyChant
 	; rainbow dissipating (water+fire pledge)
 	; sea of fire dissipating (grass+fire pledge)
 	; swamp dissipating (water+grass pledge)
+	call HandleAuroraVeil
 	call HandleTrickRoom
 	; water sport
 	; mud sport
 	; wonder room
 	; magic room
-	; gravity
+	call HandleGravity
 	; terrain (dissipating, grass terrain recovery is elsewhere)
 	call HandleEndturnBlockB
 	call CheckFaint
 	ret c
+	; emergency exit (again)
+	call HandleThroatChop ; TODO where does this actually go?
 	; Things below do not exist in 7gen -- it's here to avoid some quirks
 	call HandleLeppaBerry
 	call HandleHealingItems
 
 	; these run even if the user switched at endturn
+	ld hl, wPlayerSubStatus3
+	res SUBSTATUS_MAGIC_COAT, [hl]
+	ld hl, wEnemySubStatus3
+	res SUBSTATUS_MAGIC_COAT, [hl]
 	ld hl, wPlayerSubStatus4
 	res SUBSTATUS_FLINCHED, [hl]
 	ld hl, wEnemySubStatus4
@@ -282,9 +292,8 @@ HandleWeather:
 	farjp RunWeatherAbilities
 
 .HandleSandstorm
-	ld a, BATTLE_VARS_SUBSTATUS3
-	call GetBattleVar
-	bit SUBSTATUS_UNDERGROUND, a
+	call GetUserSemiInvuln
+	and (SEMI_INVULNERABLE_DIGGING | SEMI_INVULNERABLE_DIVING)
 	ret nz
 	call GetTrueUserAbility
 	cp MAGIC_GUARD
@@ -323,9 +332,8 @@ HandleWeather:
 	predef_jump SubtractHPFromUser
 
 .HandleHail
-	ld a, BATTLE_VARS_SUBSTATUS3
-	call GetBattleVar
-	bit SUBSTATUS_UNDERGROUND, a
+	call GetUserSemiInvuln
+	and (SEMI_INVULNERABLE_DIGGING | SEMI_INVULNERABLE_DIVING)
 	ret nz
 	call GetTrueUserAbility
 	cp MAGIC_GUARD
@@ -437,7 +445,11 @@ HandleFutureSight:
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVarAddr
 	push af
-	ld [hl], FUTURE_SIGHT
+	push hl
+	ld hl, FUTURE_SIGHT
+	call GetMoveIDFromIndex
+	pop hl
+	ld [hl], a
 	farcall UpdateMoveData
 
 	xor a
@@ -463,7 +475,7 @@ HandleFutureSight:
 HandleLeftovers:
 	call HasUserFainted
 	ret z
-	farcall GetUserItem
+	farcall GetUserItemAfterUnnerve
 	call GetCurItemName
 	ld a, b
 	cp HELD_LEFTOVERS
@@ -494,6 +506,28 @@ PreventEndturnDamage:
 	call nz, HasUserFainted
 	ret
 
+HandleIngrain:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	ld a, BATTLE_VARS_SUBSTATUS5
+	call GetBattleVarAddr
+	bit SUBSTATUS_INGRAIN, [hl]
+	ret z
+
+	xor a
+	ld [wNumHits], a
+	ld de, INGRAIN
+	farcall PlayBattleAnimDE_OnlyIfVisible
+
+	ld hl, AbsorbedNutrientsText
+	call StdBattleTextbox
+	call GetSixteenthMaxHP
+	farcall HandleBigRoot
+	farjp RestoreHP
+
 HandleLeechSeed:
 	call SetFastestTurn
 	call .do_it
@@ -513,7 +547,7 @@ HandleLeechSeed:
 	ld de, ANIM_SAP
 	ld a, BATTLE_VARS_SUBSTATUS3_OPP
 	call GetBattleVar
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	jr nz, .no_anim
 	farcall PlayBattleAnimDE_OnlyIfVisible
 .no_anim
@@ -626,15 +660,11 @@ IncrementToxic:
 	bit TOX, a
 	ret z
 
-	inc [hl]
-
 	; Cap toxic counter at 15.
-	ld a, [hl]
-	cp 15
-	jr nz, .no_overflow
-	dec [hl]
-.no_overflow
 	inc [hl]
+	bit 4, [hl]
+	ret z
+	dec [hl]
 	ret
 
 DoPoisonBurnDamageAnim:
@@ -645,6 +675,27 @@ DoPoisonBurnDamageAnim:
 	ld [wNumHits], a
 	farcall PlayBattleAnimDE_OnlyIfVisible
 	jmp GetEighthMaxHP
+
+HandleNightmare:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	farcall UpdateNightmare
+	ld a, BATTLE_VARS_SUBSTATUS5
+	call GetBattleVarAddr
+	bit SUBSTATUS_NIGHTMARE, [hl]
+	ret z
+
+	xor a
+	ld [wNumHits], a
+	ld de, ANIM_UNDER_CURSE
+	farcall PlayBattleAnimDE_OnlyIfVisible
+	call GetQuarterMaxHP
+	predef SubtractHPFromUser
+	ld hl, HurtByNightmareText
+	jmp StdBattleTextbox
 
 HandleCurse:
 	call SetFastestTurn
@@ -696,19 +747,24 @@ HandleWrap:
 
 	push de
 	ld a, [de]
+	push hl
+	call GetMoveIndexFromID
+	ld a, l
 	ld [wFXAnimIDLo], a
+	ld a, h
+	ld [wFXAnimIDHi], a
+	pop hl
 	dec [hl]
 	ld hl, BattleText_UserWasReleasedFromStringBuffer1
 	jr z, .print_text
 
 	ld a, BATTLE_VARS_SUBSTATUS3
 	call GetBattleVar
-	and 1 << SUBSTATUS_FLYING | 1 << SUBSTATUS_UNDERGROUND
+	and 1 << SUBSTATUS_SEMI_INVULNERABLE
 	jr nz, .skip_anim
 	call SwitchTurn
 	xor a
 	ld [wNumHits], a
-	ld [wFXAnimIDHi], a
 	predef PlayBattleAnim
 	call SwitchTurn
 
@@ -875,6 +931,24 @@ HandleTrickRoom:
 	ld hl, TrickRoomEndedText
 	jmp StdBattleTextbox
 
+HandleGravity:
+	ld hl, wFieldEffects
+	ld a, [hl]
+	and FIELD_GRAVITY
+	ret z
+	ld b, a
+	xor [hl]
+	ld [hl], a
+	ld a, b
+	dec a
+	jr nz, .not_done
+	ld hl, GravityEndedText
+	call StdBattleTextbox
+.not_done
+	or [hl]
+	ld [hl], a
+	ret
+
 HandleLeppaBerry:
 	call SetFastestTurn
 	call .do_it
@@ -946,6 +1020,19 @@ HandleLightScreen:
 	ld de, BattleText_LightScreenFell
 	jr DecrementHighNibble
 
+HandleAuroraVeil:
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerVeils
+	jr z, .got_veils
+	ld hl, wEnemyVeils
+.got_veils
+	ld de, BattleText_AuroraVeilFaded
+	jr DecrementLowNibble
+
 HandleMist:
 	call SetFastestTurn
 	call .do_it
@@ -958,7 +1045,7 @@ HandleMist:
 	ld hl, wEnemyGuards
 .got_guards
 	ld de, BattleText_MistFaded
-
+	; fallthrough
 DecrementHighNibble:
 ; Decrements higher nibble in hl. If it reaches 0, print message in de.
 	ld a, [hl]
@@ -970,6 +1057,32 @@ DecrementHighNibble:
 PrintTextAfterNibbleTick:
 	ld h, d
 	ld l, e
+	jmp StdBattleTextbox
+
+HandleLuckyChant:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerTeamEffects
+	jr z, .ok
+	ld hl, wEnemyTeamEffects
+.ok
+	ld a, [hl]
+	and TEAM_LUCKY_CHANT
+	ret z
+	dec a
+	push af
+	ld b, a
+	ld a, [hl]
+	and ~(TEAM_LUCKY_CHANT)
+	or b
+	ld [hl], a
+	pop af
+	ret nz
+	ld hl, BattleText_LuckyChantEnded
 	jmp StdBattleTextbox
 
 GetTurnAndPlacePrefix:
@@ -1074,3 +1187,93 @@ HandleRoost:
 	ld [hld], a
 	ld [hl], a
 	ret
+
+
+HandleTaunt:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerTauntCount
+	jr z, .got_taunt
+	ld hl, wEnemyTauntCount
+.got_taunt
+	ld de, BattleText_TauntEnded
+	jmp DecrementHighNibble
+
+
+HandleThroatChop:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerThroatChopEmbargoCount
+	jr z, .got_throat_chop
+	ld hl, wEnemyThroatChopEmbargoCount
+.got_throat_chop
+	ld a, [hl]
+	sub $10
+	ret c
+	ld [hl], a
+	ret
+
+
+HandleEmbargo:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerThroatChopEmbargoCount
+	jr z, .got_embargo
+	ld hl, wEnemyThroatChopEmbargoCount
+.got_embargo
+	ld a, [hl]
+	and $0F
+	ret z
+	ld a, [hl]
+	dec a
+	ld [hl], a
+	ret
+
+
+HandleMagnetRise:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerYawnMagnetRiseCount
+	jr z, .got_rise
+	ld hl, wEnemyYawnMagnetRiseCount
+.got_rise
+	ld de, BattleText_MagnetRiseEnded
+	jmp DecrementLowNibble
+
+
+HandleYawn:
+	call SetFastestTurn
+	call .do_it
+	call SwitchTurn
+
+.do_it
+	call GetTurnAndPlacePrefix
+	ld hl, wPlayerYawnMagnetRiseCount
+	jr z, .got_yawn
+	ld hl, wEnemyYawnMagnetRiseCount
+.got_yawn
+	ld a, [hl]
+	sub $10
+	ret c
+	ld [hl], a
+	sub $10
+	ret nc
+	call SwitchTurn
+	farcall SleepTarget
+	jmp SwitchTurn
